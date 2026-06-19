@@ -1,0 +1,1505 @@
+{
+  "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Risk Ripple",
+          "informationUri": "https://example.com",
+          "version": "1.0.0",
+          "rules": [
+            {
+              "id": "GEN001",
+              "name": "GEN001",
+              "shortDescription": {
+                "text": "Possible eval usage"
+              },
+              "fullDescription": {
+                "text": "eval() may execute untrusted input (detected by pattern).\nRemediation: Avoid eval(). Use safe parsing or explicit logic.\nReferences: CWE-94"
+              },
+              "help": {
+                "text": "Avoid eval(). Use safe parsing or explicit logic. (CWE-94)"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "LOW",
+                "cwe": "CWE-94"
+              }
+            },
+            {
+              "id": "GEN002",
+              "name": "GEN002",
+              "shortDescription": {
+                "text": "Possible exec usage"
+              },
+              "fullDescription": {
+                "text": "exec() may execute untrusted input (detected by pattern).\nRemediation: Avoid exec(). Use safer explicit logic.\nReferences: CWE-95"
+              },
+              "help": {
+                "text": "Avoid exec(). Use safer explicit logic. (CWE-95)"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "LOW",
+                "cwe": "CWE-95"
+              }
+            },
+            {
+              "id": "PY001",
+              "name": "PY001",
+              "shortDescription": {
+                "text": "Use of eval()"
+              },
+              "fullDescription": {
+                "text": "eval() executes dynamic Python code and may allow code injection when given untrusted input.\nRemediation: Avoid eval(). Use safe parsing, explicit logic, or restricted parsing libraries.\nReferences: CWE-94, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Avoid eval(). Use safe parsing, explicit logic, or restricted parsing libraries. (CWE-94) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-94",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "PY002",
+              "name": "PY002",
+              "shortDescription": {
+                "text": "Use of exec()"
+              },
+              "fullDescription": {
+                "text": "exec() executes dynamic Python code and can introduce severe security risk.\nRemediation: Avoid exec(). Replace with explicit logic or safer alternatives.\nReferences: CWE-95, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Avoid exec(). Replace with explicit logic or safer alternatives. (CWE-95) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-95",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "PY003",
+              "name": "PY003",
+              "shortDescription": {
+                "text": "Use of os.system()"
+              },
+              "fullDescription": {
+                "text": "os.system() may lead to command injection if arguments include untrusted input.\nRemediation: Use subprocess.run() with a list of arguments and avoid shell interpretation.\nReferences: CWE-78, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Use subprocess.run() with a list of arguments and avoid shell interpretation. (CWE-78) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Command Injection",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-78",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "PY004",
+              "name": "PY004",
+              "shortDescription": {
+                "text": "Subprocess with shell=True"
+              },
+              "fullDescription": {
+                "text": "shell=True increases command injection risk when command content is not fully trusted.\nRemediation: Avoid shell=True. Pass command arguments as a list instead.\nReferences: CWE-78, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Avoid shell=True. Pass command arguments as a list instead. (CWE-78) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Command Injection",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-78",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "PY005",
+              "name": "PY005",
+              "shortDescription": {
+                "text": "Unsafe pickle deserialization"
+              },
+              "fullDescription": {
+                "text": "pickle deserialization may execute arbitrary code when loading untrusted data.\nRemediation: Do not deserialize untrusted pickle data. Use JSON or other safe formats.\nReferences: CWE-502, A08:2021-Software and Data Integrity Failures"
+              },
+              "help": {
+                "text": "Do not deserialize untrusted pickle data. Use JSON or other safe formats. (CWE-502) [A08:2021-Software and Data Integrity Failures]"
+              },
+              "properties": {
+                "category": "Unsafe Deserialization",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-502",
+                "owasp": "A08:2021-Software and Data Integrity Failures"
+              }
+            },
+            {
+              "id": "PY006",
+              "name": "PY006",
+              "shortDescription": {
+                "text": "Use of yaml.load()"
+              },
+              "fullDescription": {
+                "text": "yaml.load() may be unsafe when parsing untrusted YAML content.\nRemediation: Prefer yaml.safe_load() for untrusted input.\nReferences: CWE-502, A08:2021-Software and Data Integrity Failures"
+              },
+              "help": {
+                "text": "Prefer yaml.safe_load() for untrusted input. (CWE-502) [A08:2021-Software and Data Integrity Failures]"
+              },
+              "properties": {
+                "category": "Unsafe Deserialization",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-502",
+                "owasp": "A08:2021-Software and Data Integrity Failures"
+              }
+            },
+            {
+              "id": "PY007",
+              "name": "PY007",
+              "shortDescription": {
+                "text": "Use of compile()"
+              },
+              "fullDescription": {
+                "text": "compile() builds code objects from strings; with untrusted input it can enable code execution (e.g. via exec()).\nRemediation: Avoid compiling untrusted input. Use safe parsing or restricted modes; prefer structured data over code strings.\nReferences: CWE-94, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Avoid compiling untrusted input. Use safe parsing or restricted modes; prefer structured data over code strings. (CWE-94) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-94",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "RH001",
+              "name": "RH001",
+              "shortDescription": {
+                "text": "Tracked cache or build directory"
+              },
+              "fullDescription": {
+                "text": "Directory such as __pycache__ should not be committed; it is generated/cache content.\nRemediation: Add to .gitignore and remove from index if already tracked (git rm -r --cached)."
+              },
+              "help": {
+                "text": "Add to .gitignore and remove from index if already tracked (git rm -r --cached)."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "MEDIUM",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "RH002",
+              "name": "RH002",
+              "shortDescription": {
+                "text": "Environment or secret file tracked"
+              },
+              "fullDescription": {
+                "text": "Environment or secret-bearing file (e.g. .env) should not be committed.\nRemediation: Add .env to .gitignore; revoke/rotate any exposed secrets; git rm --cached.\nReferences: CWE-798"
+              },
+              "help": {
+                "text": "Add .env to .gitignore; revoke/rotate any exposed secrets; git rm --cached. (CWE-798)"
+              },
+              "properties": {
+                "category": "Sensitive Artifacts",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-798"
+              }
+            },
+            {
+              "id": "RH003",
+              "name": "RH003",
+              "shortDescription": {
+                "text": "Private key or certificate artifact"
+              },
+              "fullDescription": {
+                "text": "Private key or certificate file should never be committed.\nRemediation: Revoke/rotate the key; remove from repo; add *.pem, *.key, id_rsa to .gitignore.\nReferences: CWE-321"
+              },
+              "help": {
+                "text": "Revoke/rotate the key; remove from repo; add *.pem, *.key, id_rsa to .gitignore. (CWE-321)"
+              },
+              "properties": {
+                "category": "Secret Exposure",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-321"
+              }
+            },
+            {
+              "id": "RH004",
+              "name": "RH004",
+              "shortDescription": {
+                "text": "Python bytecode file tracked"
+              },
+              "fullDescription": {
+                "text": "Compiled .pyc file should not be committed.\nRemediation: Add *.pyc and __pycache__/ to .gitignore; git rm --cached '*.pyc'."
+              },
+              "help": {
+                "text": "Add *.pyc and __pycache__/ to .gitignore; git rm --cached '*.pyc'."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "LOW",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "RH004b",
+              "name": "RH004b",
+              "shortDescription": {
+                "text": "Python optimized bytecode file tracked"
+              },
+              "fullDescription": {
+                "text": "Compiled .pyo file should not be committed.\nRemediation: Add *.pyo to .gitignore; git rm --cached '*.pyo'."
+              },
+              "help": {
+                "text": "Add *.pyo to .gitignore; git rm --cached '*.pyo'."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "LOW",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "RH005",
+              "name": "RH005",
+              "shortDescription": {
+                "text": "Secret or API key detected in file"
+              },
+              "fullDescription": {
+                "text": "File content matches secret/API key pattern; treat as exposed.\nRemediation: Revoke/rotate the key; remove from git; consider purging from history.\nReferences: CWE-798"
+              },
+              "help": {
+                "text": "Revoke/rotate the key; remove from git; consider purging from history. (CWE-798)"
+              },
+              "properties": {
+                "category": "Secret Exposure",
+                "severity": "CRITICAL",
+                "confidence": "HIGH",
+                "cwe": "CWE-798"
+              }
+            },
+            {
+              "id": "RH010",
+              "name": "RH010",
+              "shortDescription": {
+                "text": ".gitignore missing critical patterns"
+              },
+              "fullDescription": {
+                "text": ".gitignore does not include recommended patterns; rules do not remove already tracked files.\nRemediation: Add .env, __pycache__/, *.pyc, *.pyo, venv/ to .gitignore; git rm --cached for tracked sensitive files."
+              },
+              "help": {
+                "text": "Add .env, __pycache__/, *.pyc, *.pyo, venv/ to .gitignore; git rm --cached for tracked sensitive files."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "HIGH",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "RH011",
+              "name": "RH011",
+              "shortDescription": {
+                "text": "Verify sensitive files are not tracked"
+              },
+              "fullDescription": {
+                "text": ".gitignore rules do not remove files already tracked by git.\nRemediation: Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv."
+              },
+              "help": {
+                "text": "Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "MEDIUM",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "SEC001",
+              "name": "SEC001",
+              "shortDescription": {
+                "text": "Potential hardcoded password"
+              },
+              "fullDescription": {
+                "text": "Possible hardcoded password detected in source.\nRemediation: Move secrets to environment variables or a secure secrets manager.\nReferences: CWE-798, A07:2021-Identification and Authentication Failures"
+              },
+              "help": {
+                "text": "Move secrets to environment variables or a secure secrets manager. (CWE-798) [A07:2021-Identification and Authentication Failures]"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-798",
+                "owasp": "A07:2021-Identification and Authentication Failures"
+              }
+            },
+            {
+              "id": "SEC002",
+              "name": "SEC002",
+              "shortDescription": {
+                "text": "Potential hardcoded API key or token"
+              },
+              "fullDescription": {
+                "text": "Possible hardcoded credential or token detected.\nRemediation: Store credentials outside source code and inject them securely at runtime.\nReferences: CWE-798, A07:2021-Identification and Authentication Failures"
+              },
+              "help": {
+                "text": "Store credentials outside source code and inject them securely at runtime. (CWE-798) [A07:2021-Identification and Authentication Failures]"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-798",
+                "owasp": "A07:2021-Identification and Authentication Failures"
+              }
+            },
+            {
+              "id": "SEC003",
+              "name": "SEC003",
+              "shortDescription": {
+                "text": "Flask debug mode enabled"
+              },
+              "fullDescription": {
+                "text": "Debug mode may expose sensitive information in production.\nRemediation: Disable debug mode in production deployments.\nReferences: CWE-489, A05:2021-Security Misconfiguration"
+              },
+              "help": {
+                "text": "Disable debug mode in production deployments. (CWE-489) [A05:2021-Security Misconfiguration]"
+              },
+              "properties": {
+                "category": "Insecure Configuration",
+                "severity": "MEDIUM",
+                "confidence": "HIGH",
+                "cwe": "CWE-489",
+                "owasp": "A05:2021-Security Misconfiguration"
+              }
+            },
+            {
+              "id": "SEC004",
+              "name": "SEC004",
+              "shortDescription": {
+                "text": "TLS certificate verification disabled"
+              },
+              "fullDescription": {
+                "text": "Disabling certificate verification weakens transport security.\nRemediation: Enable certificate verification and trust valid CA certificates.\nReferences: CWE-295, A07:2021-Identification and Authentication Failures"
+              },
+              "help": {
+                "text": "Enable certificate verification and trust valid CA certificates. (CWE-295) [A07:2021-Identification and Authentication Failures]"
+              },
+              "properties": {
+                "category": "TLS/SSL",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-295",
+                "owasp": "A07:2021-Identification and Authentication Failures"
+              }
+            },
+            {
+              "id": "SEC005",
+              "name": "SEC005",
+              "shortDescription": {
+                "text": "Insecure MD5 usage"
+              },
+              "fullDescription": {
+                "text": "MD5 is not suitable for security-sensitive cryptographic use.\nRemediation: Use SHA-256 or stronger; use password hashing libraries for passwords.\nReferences: CWE-328, A02:2021-Cryptographic Failures"
+              },
+              "help": {
+                "text": "Use SHA-256 or stronger; use password hashing libraries for passwords. (CWE-328) [A02:2021-Cryptographic Failures]"
+              },
+              "properties": {
+                "category": "Cryptography",
+                "severity": "MEDIUM",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-328",
+                "owasp": "A02:2021-Cryptographic Failures"
+              }
+            },
+            {
+              "id": "SEC006",
+              "name": "SEC006",
+              "shortDescription": {
+                "text": "Insecure SHA-1 usage"
+              },
+              "fullDescription": {
+                "text": "SHA-1 is deprecated for many security-sensitive use cases.\nRemediation: Use SHA-256 or stronger modern cryptographic primitives.\nReferences: CWE-328, A02:2021-Cryptographic Failures"
+              },
+              "help": {
+                "text": "Use SHA-256 or stronger modern cryptographic primitives. (CWE-328) [A02:2021-Cryptographic Failures]"
+              },
+              "properties": {
+                "category": "Cryptography",
+                "severity": "MEDIUM",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-328",
+                "owasp": "A02:2021-Cryptographic Failures"
+              }
+            },
+            {
+              "id": "SEC007",
+              "name": "SEC007",
+              "shortDescription": {
+                "text": "Potential hardcoded bearer token"
+              },
+              "fullDescription": {
+                "text": "Possible hardcoded bearer token detected.\nRemediation: Remove tokens from source code and load them securely.\nReferences: CWE-798"
+              },
+              "help": {
+                "text": "Remove tokens from source code and load them securely. (CWE-798)"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-798"
+              }
+            },
+            {
+              "id": "SEC008",
+              "name": "SEC008",
+              "shortDescription": {
+                "text": "Potential private key material in source"
+              },
+              "fullDescription": {
+                "text": "Private key material appears to be present in source code.\nRemediation: Remove the key from the repository and rotate/revoke the affected credentials.\nReferences: CWE-321, A02:2021-Cryptographic Failures"
+              },
+              "help": {
+                "text": "Remove the key from the repository and rotate/revoke the affected credentials. (CWE-321) [A02:2021-Cryptographic Failures]"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-321",
+                "owasp": "A02:2021-Cryptographic Failures"
+              }
+            },
+            {
+              "id": "SEC009",
+              "name": "SEC009",
+              "shortDescription": {
+                "text": "Insecure random for security-sensitive context"
+              },
+              "fullDescription": {
+                "text": "The random module is not cryptographically secure for tokens or secrets.\nRemediation: Use the secrets module for tokens/keys, or os.urandom for raw bytes.\nReferences: CWE-330"
+              },
+              "help": {
+                "text": "Use the secrets module for tokens/keys, or os.urandom for raw bytes. (CWE-330)"
+              },
+              "properties": {
+                "category": "Cryptography",
+                "severity": "LOW",
+                "confidence": "LOW",
+                "cwe": "CWE-330"
+              }
+            },
+            {
+              "id": "SEC010",
+              "name": "SEC010",
+              "shortDescription": {
+                "text": "Insecure SSL/TLS protocol settings"
+              },
+              "fullDescription": {
+                "text": "Older SSL/TLS protocol versions are insecure or deprecated.\nRemediation: Use modern TLS defaults and avoid forcing legacy protocol versions.\nReferences: CWE-326"
+              },
+              "help": {
+                "text": "Use modern TLS defaults and avoid forcing legacy protocol versions. (CWE-326)"
+              },
+              "properties": {
+                "category": "TLS/SSL",
+                "severity": "MEDIUM",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-326"
+              }
+            },
+            {
+              "id": "TAINT-CMD",
+              "name": "TAINT-CMD",
+              "shortDescription": {
+                "text": "Taint flow to command execution"
+              },
+              "fullDescription": {
+                "text": "Tainted user input flows into shell/process execution; may allow command injection.\nRemediation: Use allowlists and avoid shell=True; prefer subprocess with list args.\nReferences: CWE-78, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Use allowlists and avoid shell=True; prefer subprocess with list args. (CWE-78) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Command Injection",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-78",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "TAINT-PATH",
+              "name": "TAINT-PATH",
+              "shortDescription": {
+                "text": "Taint flow to file path"
+              },
+              "fullDescription": {
+                "text": "Tainted user input flows into file open path; may allow path traversal.\nRemediation: Validate and sanitize paths; avoid user-controlled paths.\nReferences: CWE-22, A01:2021-Broken Access Control"
+              },
+              "help": {
+                "text": "Validate and sanitize paths; avoid user-controlled paths. (CWE-22) [A01:2021-Broken Access Control]"
+              },
+              "properties": {
+                "category": "Path Traversal",
+                "severity": "MEDIUM",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-22",
+                "owasp": "A01:2021-Broken Access Control"
+              }
+            },
+            {
+              "id": "TAINT-SQL",
+              "name": "TAINT-SQL",
+              "shortDescription": {
+                "text": "Taint flow to SQL execution"
+              },
+              "fullDescription": {
+                "text": "Tainted user input flows into SQL execution; may allow SQL injection.\nRemediation: Use parameterized queries or prepared statements.\nReferences: CWE-89, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Use parameterized queries or prepared statements. (CWE-89) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "SQL Injection",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-89",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "TAINT001",
+              "name": "TAINT001",
+              "shortDescription": {
+                "text": "Taint flow to dangerous sink"
+              },
+              "fullDescription": {
+                "text": "Tainted data reaches a dangerous sink.\nRemediation: Validate and sanitize user input before use in sensitive operations."
+              },
+              "help": {
+                "text": "Validate and sanitize user input before use in sensitive operations."
+              },
+              "properties": {
+                "category": "Taint Analysis",
+                "severity": "HIGH",
+                "confidence": "MEDIUM"
+              }
+            },
+            {
+              "id": "command-injection-taint",
+              "name": "command-injection-taint",
+              "shortDescription": {
+                "text": "Taint flow to command execution"
+              },
+              "fullDescription": {
+                "text": "Tainted user input flows into shell/process execution; may allow command injection.\nRemediation: Use allowlists and avoid shell=True; prefer subprocess with list args.\nReferences: CWE-78, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Use allowlists and avoid shell=True; prefer subprocess with list args. (CWE-78) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Command Injection",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-78",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "flask-debug-true",
+              "name": "flask-debug-true",
+              "shortDescription": {
+                "text": "Flask debug mode enabled"
+              },
+              "fullDescription": {
+                "text": "Debug mode may expose sensitive information in production.\nRemediation: Disable debug mode in production deployments.\nReferences: CWE-489, A05:2021-Security Misconfiguration"
+              },
+              "help": {
+                "text": "Disable debug mode in production deployments. (CWE-489) [A05:2021-Security Misconfiguration]"
+              },
+              "properties": {
+                "category": "Insecure Configuration",
+                "severity": "MEDIUM",
+                "confidence": "HIGH",
+                "cwe": "CWE-489",
+                "owasp": "A05:2021-Security Misconfiguration"
+              }
+            },
+            {
+              "id": "insecure-md5",
+              "name": "insecure-md5",
+              "shortDescription": {
+                "text": "Insecure MD5 usage"
+              },
+              "fullDescription": {
+                "text": "MD5 is not suitable for security-sensitive cryptographic use.\nRemediation: Use SHA-256 or stronger; use password hashing libraries for passwords.\nReferences: CWE-328, A02:2021-Cryptographic Failures"
+              },
+              "help": {
+                "text": "Use SHA-256 or stronger; use password hashing libraries for passwords. (CWE-328) [A02:2021-Cryptographic Failures]"
+              },
+              "properties": {
+                "category": "Cryptography",
+                "severity": "MEDIUM",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-328",
+                "owasp": "A02:2021-Cryptographic Failures"
+              }
+            },
+            {
+              "id": "insecure-random",
+              "name": "insecure-random",
+              "shortDescription": {
+                "text": "Insecure random for security-sensitive context"
+              },
+              "fullDescription": {
+                "text": "The random module is not cryptographically secure for tokens or secrets.\nRemediation: Use the secrets module for tokens/keys, or os.urandom for raw bytes.\nReferences: CWE-330"
+              },
+              "help": {
+                "text": "Use the secrets module for tokens/keys, or os.urandom for raw bytes. (CWE-330)"
+              },
+              "properties": {
+                "category": "Cryptography",
+                "severity": "LOW",
+                "confidence": "LOW",
+                "cwe": "CWE-330"
+              }
+            },
+            {
+              "id": "insecure-sha1",
+              "name": "insecure-sha1",
+              "shortDescription": {
+                "text": "Insecure SHA-1 usage"
+              },
+              "fullDescription": {
+                "text": "SHA-1 is deprecated for many security-sensitive use cases.\nRemediation: Use SHA-256 or stronger modern cryptographic primitives.\nReferences: CWE-328, A02:2021-Cryptographic Failures"
+              },
+              "help": {
+                "text": "Use SHA-256 or stronger modern cryptographic primitives. (CWE-328) [A02:2021-Cryptographic Failures]"
+              },
+              "properties": {
+                "category": "Cryptography",
+                "severity": "MEDIUM",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-328",
+                "owasp": "A02:2021-Cryptographic Failures"
+              }
+            },
+            {
+              "id": "insecure-ssl-protocol",
+              "name": "insecure-ssl-protocol",
+              "shortDescription": {
+                "text": "Insecure SSL/TLS protocol settings"
+              },
+              "fullDescription": {
+                "text": "Older SSL/TLS protocol versions are insecure or deprecated.\nRemediation: Use modern TLS defaults and avoid forcing legacy protocol versions.\nReferences: CWE-326"
+              },
+              "help": {
+                "text": "Use modern TLS defaults and avoid forcing legacy protocol versions. (CWE-326)"
+              },
+              "properties": {
+                "category": "TLS/SSL",
+                "severity": "MEDIUM",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-326"
+              }
+            },
+            {
+              "id": "path-traversal-taint",
+              "name": "path-traversal-taint",
+              "shortDescription": {
+                "text": "Taint flow to file path"
+              },
+              "fullDescription": {
+                "text": "Tainted user input flows into file open path; may allow path traversal.\nRemediation: Validate and sanitize paths; avoid user-controlled paths.\nReferences: CWE-22, A01:2021-Broken Access Control"
+              },
+              "help": {
+                "text": "Validate and sanitize paths; avoid user-controlled paths. (CWE-22) [A01:2021-Broken Access Control]"
+              },
+              "properties": {
+                "category": "Path Traversal",
+                "severity": "MEDIUM",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-22",
+                "owasp": "A01:2021-Broken Access Control"
+              }
+            },
+            {
+              "id": "python-compile",
+              "name": "python-compile",
+              "shortDescription": {
+                "text": "Use of compile()"
+              },
+              "fullDescription": {
+                "text": "compile() builds code objects from strings; with untrusted input it can enable code execution (e.g. via exec()).\nRemediation: Avoid compiling untrusted input. Use safe parsing or restricted modes; prefer structured data over code strings.\nReferences: CWE-94, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Avoid compiling untrusted input. Use safe parsing or restricted modes; prefer structured data over code strings. (CWE-94) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-94",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "python-eval-use",
+              "name": "python-eval-use",
+              "shortDescription": {
+                "text": "Use of eval()"
+              },
+              "fullDescription": {
+                "text": "eval() executes dynamic Python code and may allow code injection when given untrusted input.\nRemediation: Avoid eval(). Use safe parsing, explicit logic, or restricted parsing libraries.\nReferences: CWE-94, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Avoid eval(). Use safe parsing, explicit logic, or restricted parsing libraries. (CWE-94) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-94",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "python-eval-use-regex",
+              "name": "python-eval-use-regex",
+              "shortDescription": {
+                "text": "Possible eval usage"
+              },
+              "fullDescription": {
+                "text": "eval() may execute untrusted input (detected by pattern).\nRemediation: Avoid eval(). Use safe parsing or explicit logic.\nReferences: CWE-94"
+              },
+              "help": {
+                "text": "Avoid eval(). Use safe parsing or explicit logic. (CWE-94)"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "LOW",
+                "cwe": "CWE-94"
+              }
+            },
+            {
+              "id": "python-exec-use",
+              "name": "python-exec-use",
+              "shortDescription": {
+                "text": "Use of exec()"
+              },
+              "fullDescription": {
+                "text": "exec() executes dynamic Python code and can introduce severe security risk.\nRemediation: Avoid exec(). Replace with explicit logic or safer alternatives.\nReferences: CWE-95, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Avoid exec(). Replace with explicit logic or safer alternatives. (CWE-95) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-95",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "python-exec-use-regex",
+              "name": "python-exec-use-regex",
+              "shortDescription": {
+                "text": "Possible exec usage"
+              },
+              "fullDescription": {
+                "text": "exec() may execute untrusted input (detected by pattern).\nRemediation: Avoid exec(). Use safer explicit logic.\nReferences: CWE-95"
+              },
+              "help": {
+                "text": "Avoid exec(). Use safer explicit logic. (CWE-95)"
+              },
+              "properties": {
+                "category": "Code Injection",
+                "severity": "HIGH",
+                "confidence": "LOW",
+                "cwe": "CWE-95"
+              }
+            },
+            {
+              "id": "python-os-system",
+              "name": "python-os-system",
+              "shortDescription": {
+                "text": "Use of os.system()"
+              },
+              "fullDescription": {
+                "text": "os.system() may lead to command injection if arguments include untrusted input.\nRemediation: Use subprocess.run() with a list of arguments and avoid shell interpretation.\nReferences: CWE-78, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Use subprocess.run() with a list of arguments and avoid shell interpretation. (CWE-78) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Command Injection",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-78",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "python-pickle-loads",
+              "name": "python-pickle-loads",
+              "shortDescription": {
+                "text": "Unsafe pickle deserialization"
+              },
+              "fullDescription": {
+                "text": "pickle deserialization may execute arbitrary code when loading untrusted data.\nRemediation: Do not deserialize untrusted pickle data. Use JSON or other safe formats.\nReferences: CWE-502, A08:2021-Software and Data Integrity Failures"
+              },
+              "help": {
+                "text": "Do not deserialize untrusted pickle data. Use JSON or other safe formats. (CWE-502) [A08:2021-Software and Data Integrity Failures]"
+              },
+              "properties": {
+                "category": "Unsafe Deserialization",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-502",
+                "owasp": "A08:2021-Software and Data Integrity Failures"
+              }
+            },
+            {
+              "id": "python-subprocess-shell-true",
+              "name": "python-subprocess-shell-true",
+              "shortDescription": {
+                "text": "Subprocess with shell=True"
+              },
+              "fullDescription": {
+                "text": "shell=True increases command injection risk when command content is not fully trusted.\nRemediation: Avoid shell=True. Pass command arguments as a list instead.\nReferences: CWE-78, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Avoid shell=True. Pass command arguments as a list instead. (CWE-78) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "Command Injection",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-78",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "python-yaml-load",
+              "name": "python-yaml-load",
+              "shortDescription": {
+                "text": "Use of yaml.load()"
+              },
+              "fullDescription": {
+                "text": "yaml.load() may be unsafe when parsing untrusted YAML content.\nRemediation: Prefer yaml.safe_load() for untrusted input.\nReferences: CWE-502, A08:2021-Software and Data Integrity Failures"
+              },
+              "help": {
+                "text": "Prefer yaml.safe_load() for untrusted input. (CWE-502) [A08:2021-Software and Data Integrity Failures]"
+              },
+              "properties": {
+                "category": "Unsafe Deserialization",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-502",
+                "owasp": "A08:2021-Software and Data Integrity Failures"
+              }
+            },
+            {
+              "id": "repo-env-file",
+              "name": "repo-env-file",
+              "shortDescription": {
+                "text": "Environment or secret file tracked"
+              },
+              "fullDescription": {
+                "text": "Environment or secret-bearing file (e.g. .env) should not be committed.\nRemediation: Add .env to .gitignore; revoke/rotate any exposed secrets; git rm --cached.\nReferences: CWE-798"
+              },
+              "help": {
+                "text": "Add .env to .gitignore; revoke/rotate any exposed secrets; git rm --cached. (CWE-798)"
+              },
+              "properties": {
+                "category": "Sensitive Artifacts",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-798"
+              }
+            },
+            {
+              "id": "repo-gitignore-missing",
+              "name": "repo-gitignore-missing",
+              "shortDescription": {
+                "text": ".gitignore missing critical patterns"
+              },
+              "fullDescription": {
+                "text": ".gitignore does not include recommended patterns; rules do not remove already tracked files.\nRemediation: Add .env, __pycache__/, *.pyc, *.pyo, venv/ to .gitignore; git rm --cached for tracked sensitive files."
+              },
+              "help": {
+                "text": "Add .env, __pycache__/, *.pyc, *.pyo, venv/ to .gitignore; git rm --cached for tracked sensitive files."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "HIGH",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "repo-gitignore-tracked",
+              "name": "repo-gitignore-tracked",
+              "shortDescription": {
+                "text": "Verify sensitive files are not tracked"
+              },
+              "fullDescription": {
+                "text": ".gitignore rules do not remove files already tracked by git.\nRemediation: Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv."
+              },
+              "help": {
+                "text": "Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "MEDIUM",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "repo-private-key",
+              "name": "repo-private-key",
+              "shortDescription": {
+                "text": "Private key or certificate artifact"
+              },
+              "fullDescription": {
+                "text": "Private key or certificate file should never be committed.\nRemediation: Revoke/rotate the key; remove from repo; add *.pem, *.key, id_rsa to .gitignore.\nReferences: CWE-321"
+              },
+              "help": {
+                "text": "Revoke/rotate the key; remove from repo; add *.pem, *.key, id_rsa to .gitignore. (CWE-321)"
+              },
+              "properties": {
+                "category": "Secret Exposure",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-321"
+              }
+            },
+            {
+              "id": "repo-pyc-artifact",
+              "name": "repo-pyc-artifact",
+              "shortDescription": {
+                "text": "Python bytecode file tracked"
+              },
+              "fullDescription": {
+                "text": "Compiled .pyc file should not be committed.\nRemediation: Add *.pyc and __pycache__/ to .gitignore; git rm --cached '*.pyc'."
+              },
+              "help": {
+                "text": "Add *.pyc and __pycache__/ to .gitignore; git rm --cached '*.pyc'."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "LOW",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "repo-pycache-dir",
+              "name": "repo-pycache-dir",
+              "shortDescription": {
+                "text": "Tracked cache or build directory"
+              },
+              "fullDescription": {
+                "text": "Directory such as __pycache__ should not be committed; it is generated/cache content.\nRemediation: Add to .gitignore and remove from index if already tracked (git rm -r --cached)."
+              },
+              "help": {
+                "text": "Add to .gitignore and remove from index if already tracked (git rm -r --cached)."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "MEDIUM",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "repo-pyo-artifact",
+              "name": "repo-pyo-artifact",
+              "shortDescription": {
+                "text": "Python optimized bytecode file tracked"
+              },
+              "fullDescription": {
+                "text": "Compiled .pyo file should not be committed.\nRemediation: Add *.pyo to .gitignore; git rm --cached '*.pyo'."
+              },
+              "help": {
+                "text": "Add *.pyo to .gitignore; git rm --cached '*.pyo'."
+              },
+              "properties": {
+                "category": "Repository Hygiene",
+                "severity": "LOW",
+                "confidence": "HIGH"
+              }
+            },
+            {
+              "id": "repo-secret-in-file",
+              "name": "repo-secret-in-file",
+              "shortDescription": {
+                "text": "Secret or API key detected in file"
+              },
+              "fullDescription": {
+                "text": "File content matches secret/API key pattern; treat as exposed.\nRemediation: Revoke/rotate the key; remove from git; consider purging from history.\nReferences: CWE-798"
+              },
+              "help": {
+                "text": "Revoke/rotate the key; remove from git; consider purging from history. (CWE-798)"
+              },
+              "properties": {
+                "category": "Secret Exposure",
+                "severity": "CRITICAL",
+                "confidence": "HIGH",
+                "cwe": "CWE-798"
+              }
+            },
+            {
+              "id": "requests-verify-false",
+              "name": "requests-verify-false",
+              "shortDescription": {
+                "text": "TLS certificate verification disabled"
+              },
+              "fullDescription": {
+                "text": "Disabling certificate verification weakens transport security.\nRemediation: Enable certificate verification and trust valid CA certificates.\nReferences: CWE-295, A07:2021-Identification and Authentication Failures"
+              },
+              "help": {
+                "text": "Enable certificate verification and trust valid CA certificates. (CWE-295) [A07:2021-Identification and Authentication Failures]"
+              },
+              "properties": {
+                "category": "TLS/SSL",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-295",
+                "owasp": "A07:2021-Identification and Authentication Failures"
+              }
+            },
+            {
+              "id": "secret-api-key",
+              "name": "secret-api-key",
+              "shortDescription": {
+                "text": "Potential hardcoded API key or token"
+              },
+              "fullDescription": {
+                "text": "Possible hardcoded credential or token detected.\nRemediation: Store credentials outside source code and inject them securely at runtime.\nReferences: CWE-798, A07:2021-Identification and Authentication Failures"
+              },
+              "help": {
+                "text": "Store credentials outside source code and inject them securely at runtime. (CWE-798) [A07:2021-Identification and Authentication Failures]"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-798",
+                "owasp": "A07:2021-Identification and Authentication Failures"
+              }
+            },
+            {
+              "id": "secret-aws-key",
+              "name": "secret-aws-key",
+              "shortDescription": {
+                "text": "Potential AWS access key"
+              },
+              "fullDescription": {
+                "text": "Pattern matches AWS access key format in source.\nRemediation: Use IAM roles or environment variables; never commit access keys.\nReferences: CWE-798, A07:2021-Identification and Authentication Failures"
+              },
+              "help": {
+                "text": "Use IAM roles or environment variables; never commit access keys. (CWE-798) [A07:2021-Identification and Authentication Failures]"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-798",
+                "owasp": "A07:2021-Identification and Authentication Failures"
+              }
+            },
+            {
+              "id": "secret-bearer-token",
+              "name": "secret-bearer-token",
+              "shortDescription": {
+                "text": "Potential hardcoded bearer token"
+              },
+              "fullDescription": {
+                "text": "Possible hardcoded bearer token detected.\nRemediation: Remove tokens from source code and load them securely.\nReferences: CWE-798"
+              },
+              "help": {
+                "text": "Remove tokens from source code and load them securely. (CWE-798)"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-798"
+              }
+            },
+            {
+              "id": "secret-hardcoded-password",
+              "name": "secret-hardcoded-password",
+              "shortDescription": {
+                "text": "Potential hardcoded password"
+              },
+              "fullDescription": {
+                "text": "Possible hardcoded password detected in source.\nRemediation: Move secrets to environment variables or a secure secrets manager.\nReferences: CWE-798, A07:2021-Identification and Authentication Failures"
+              },
+              "help": {
+                "text": "Move secrets to environment variables or a secure secrets manager. (CWE-798) [A07:2021-Identification and Authentication Failures]"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-798",
+                "owasp": "A07:2021-Identification and Authentication Failures"
+              }
+            },
+            {
+              "id": "secret-openai-key",
+              "name": "secret-openai-key",
+              "shortDescription": {
+                "text": "Potential OpenAI-style API key"
+              },
+              "fullDescription": {
+                "text": "Pattern matches OpenAI or similar API key format in source.\nRemediation: Never commit API keys. Use environment variables or secrets manager.\nReferences: CWE-798, A07:2021-Identification and Authentication Failures"
+              },
+              "help": {
+                "text": "Never commit API keys. Use environment variables or secrets manager. (CWE-798) [A07:2021-Identification and Authentication Failures]"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-798",
+                "owasp": "A07:2021-Identification and Authentication Failures"
+              }
+            },
+            {
+              "id": "secret-private-key-material",
+              "name": "secret-private-key-material",
+              "shortDescription": {
+                "text": "Potential private key material in source"
+              },
+              "fullDescription": {
+                "text": "Private key material appears to be present in source code.\nRemediation: Remove the key from the repository and rotate/revoke the affected credentials.\nReferences: CWE-321, A02:2021-Cryptographic Failures"
+              },
+              "help": {
+                "text": "Remove the key from the repository and rotate/revoke the affected credentials. (CWE-321) [A02:2021-Cryptographic Failures]"
+              },
+              "properties": {
+                "category": "Secrets",
+                "severity": "HIGH",
+                "confidence": "HIGH",
+                "cwe": "CWE-321",
+                "owasp": "A02:2021-Cryptographic Failures"
+              }
+            },
+            {
+              "id": "sql-injection-taint",
+              "name": "sql-injection-taint",
+              "shortDescription": {
+                "text": "Taint flow to SQL execution"
+              },
+              "fullDescription": {
+                "text": "Tainted user input flows into SQL execution; may allow SQL injection.\nRemediation: Use parameterized queries or prepared statements.\nReferences: CWE-89, A03:2021-Injection"
+              },
+              "help": {
+                "text": "Use parameterized queries or prepared statements. (CWE-89) [A03:2021-Injection]"
+              },
+              "properties": {
+                "category": "SQL Injection",
+                "severity": "HIGH",
+                "confidence": "MEDIUM",
+                "cwe": "CWE-89",
+                "owasp": "A03:2021-Injection"
+              }
+            },
+            {
+              "id": "taint-dangerous-sink",
+              "name": "taint-dangerous-sink",
+              "shortDescription": {
+                "text": "Taint flow to dangerous sink"
+              },
+              "fullDescription": {
+                "text": "Tainted data reaches a dangerous sink.\nRemediation: Validate and sanitize user input before use in sensitive operations."
+              },
+              "help": {
+                "text": "Validate and sanitize user input before use in sensitive operations."
+              },
+              "properties": {
+                "category": "Taint Analysis",
+                "severity": "HIGH",
+                "confidence": "MEDIUM"
+              }
+            }
+          ]
+        }
+      },
+      "invocations": [
+        {
+          "executionSuccessful": true,
+          "startTimeUtc": "2026-06-03T11:52:07.892156Z",
+          "properties": {
+            "target": "C:\\Users\\happy\\Desktop\\ai-repo-security-scanner-main\\samples"
+          }
+        }
+      ],
+      "results": [
+        {
+          "ruleId": "PY003",
+          "level": "error",
+          "message": {
+            "text": "Use of os.system() - os.system() may lead to command injection if arguments include untrusted input."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py"
+                },
+                "region": {
+                  "startLine": 9
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "contentHash": "9156ede82f11ba4378f4d6e8f2351958"
+          },
+          "properties": {
+            "severity": "HIGH",
+            "confidence": "HIGH",
+            "category": "Command Injection",
+            "code_snippet": "      8: def run(cmd):\n>>    9:     os.system(cmd)\n     10: "
+          }
+        },
+        {
+          "ruleId": "PY005",
+          "level": "error",
+          "message": {
+            "text": "Use of pickle.loads() - pickle deserialization may execute arbitrary code when loading untrusted data."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py"
+                },
+                "region": {
+                  "startLine": 13
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "contentHash": "796c7498692b113323c6cead2e28face"
+          },
+          "properties": {
+            "severity": "HIGH",
+            "confidence": "HIGH",
+            "category": "Unsafe Deserialization",
+            "code_snippet": "     12: def load_data(data):\n>>   13:     return pickle.loads(data)\n     14: "
+          }
+        },
+        {
+          "ruleId": "PY006",
+          "level": "error",
+          "message": {
+            "text": "Use of yaml.load() - yaml.load() may be unsafe when parsing untrusted YAML content."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py"
+                },
+                "region": {
+                  "startLine": 17
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "contentHash": "7db25af732bb9b824385f1dd824b60f2"
+          },
+          "properties": {
+            "severity": "HIGH",
+            "confidence": "HIGH",
+            "category": "Unsafe Deserialization",
+            "code_snippet": "     16: def parse_yaml(text):\n>>   17:     return yaml.load(text)\n     18: "
+          }
+        },
+        {
+          "ruleId": "PY001",
+          "level": "error",
+          "message": {
+            "text": "Use of eval() - eval() executes dynamic Python code and may allow code injection."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py"
+                },
+                "region": {
+                  "startLine": 21
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "contentHash": "acb874799fd59a46c5eaa9400f26b363"
+          },
+          "properties": {
+            "severity": "HIGH",
+            "confidence": "HIGH",
+            "category": "Code Injection",
+            "code_snippet": "     20: def unsafe_eval(x):\n>>   21:     eval(x)\n     22: "
+          }
+        },
+        {
+          "ruleId": "PY003",
+          "level": "error",
+          "message": {
+            "text": "Use of os.system() - os.system() may lead to command injection if arguments include untrusted input."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py"
+                },
+                "region": {
+                  "startLine": 27
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "contentHash": "d4d85b7bc41cf560dbc42cefe6bd941d"
+          },
+          "properties": {
+            "severity": "HIGH",
+            "confidence": "HIGH",
+            "category": "Command Injection",
+            "code_snippet": "     26:     user = input()\n>>   27:     os.system(user)\n     28: "
+          }
+        },
+        {
+          "ruleId": "TAINT-CMD",
+          "level": "error",
+          "message": {
+            "text": "Taint flow: user input -> os.system - Tainted data from user input flows into os.system, which may allow command injection."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py"
+                },
+                "region": {
+                  "startLine": 27
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "contentHash": "3a0ef529b25de483607fa36534ab0a96"
+          },
+          "properties": {
+            "severity": "HIGH",
+            "confidence": "MEDIUM",
+            "category": "Command Injection",
+            "code_snippet": "     26:     user = input()\n>>   27:     os.system(user)\n     28: "
+          }
+        },
+        {
+          "ruleId": "TAINT-SQL",
+          "level": "error",
+          "message": {
+            "text": "Taint flow: user input -> cursor.execute - Tainted data from user input flows into cursor.execute, which may allow sql injection."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py"
+                },
+                "region": {
+                  "startLine": 34
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "contentHash": "a1c8822198e9b6bbac5bf44f3e42622a"
+          },
+          "properties": {
+            "severity": "HIGH",
+            "confidence": "MEDIUM",
+            "category": "SQL Injection",
+            "code_snippet": "     33:     query = \"SELECT * FROM users WHERE name=\" + name\n>>   34:     cursor.execute(query)"
+          }
+        },
+        {
+          "ruleId": "RH011",
+          "level": "warning",
+          "message": {
+            "text": "Verify sensitive files are not tracked - .gitignore only prevents untracked files from being added; it does not untrack or remove files already in the index. Sensitive or cache files already committed remain in repository history until explicitly removed."
+          },
+          "locations": [
+            {
+              "physicalLocation": {
+                "artifactLocation": {
+                  "uri": ".gitignore"
+                }
+              }
+            }
+          ],
+          "fingerprints": {
+            "contentHash": "d089a34b4d5a0aa277d487e8ac780f9a"
+          },
+          "properties": {
+            "severity": "MEDIUM",
+            "confidence": "HIGH",
+            "category": "Repository Hygiene"
+          }
+        }
+      ],
+      "properties": {
+        "repository_risk_score": 86,
+        "risk_level": "High",
+        "score_breakdown": {
+          "critical_contribution": 0,
+          "high_contribution": 42,
+          "medium_contribution": 3,
+          "low_contribution": 0,
+          "severity_contribution": 45,
+          "taint_flow_contribution": 10,
+          "secret_exposure_contribution": 0,
+          "repository_hygiene_contribution": 1.5,
+          "file_concentration_factor": 10.0,
+          "unique_files_factor": 2.0,
+          "critical_category_contribution": 18
+        }
+      }
+    }
+  ]
+}

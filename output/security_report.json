@@ -1,0 +1,283 @@
+{
+  "tool": "Risk Ripple",
+  "version": "1.0.0",
+  "generated_at": "2026-06-03T11:52:07.890406Z",
+  "target": "C:\\Users\\happy\\Desktop\\ai-repo-security-scanner-main\\samples",
+  "scan_summary": {
+    "files_scanned": 1,
+    "total_findings": 8,
+    "severity_counts": {
+      "CRITICAL": 0,
+      "HIGH": 7,
+      "MEDIUM": 1,
+      "LOW": 0
+    },
+    "repository_risk_score": 86,
+    "risk_level": "High",
+    "score_breakdown": {
+      "critical_contribution": 0,
+      "high_contribution": 42,
+      "medium_contribution": 3,
+      "low_contribution": 0,
+      "severity_contribution": 45,
+      "taint_flow_contribution": 10,
+      "secret_exposure_contribution": 0,
+      "repository_hygiene_contribution": 1.5,
+      "file_concentration_factor": 10.0,
+      "unique_files_factor": 2.0,
+      "critical_category_contribution": 18
+    }
+  },
+  "top_risky_files": [
+    {
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "risk_score": 68,
+      "findings_count": 7,
+      "severity_counts": {
+        "CRITICAL": 0,
+        "HIGH": 7,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    {
+      "file_path": ".gitignore",
+      "risk_score": 3,
+      "findings_count": 1,
+      "severity_counts": {
+        "CRITICAL": 0,
+        "HIGH": 0,
+        "MEDIUM": 1,
+        "LOW": 0
+      }
+    }
+  ],
+  "top_risky_categories": [
+    {
+      "category": "Command Injection",
+      "count": 3
+    },
+    {
+      "category": "Unsafe Deserialization",
+      "count": 2
+    },
+    {
+      "category": "Code Injection",
+      "count": 1
+    },
+    {
+      "category": "Repository Hygiene",
+      "count": 1
+    },
+    {
+      "category": "SQL Injection",
+      "count": 1
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "PY003",
+      "title": "Use of os.system()",
+      "type": "Use of os.system()",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "category": "Command Injection",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "line_number": 9,
+      "line": 9,
+      "code_snippet": "      8: def run(cmd):\n>>    9:     os.system(cmd)\n     10: ",
+      "snippet": "      8: def run(cmd):\n>>    9:     os.system(cmd)\n     10: ",
+      "code": "os.system(cmd)",
+      "description": "os.system() may lead to command injection if arguments include untrusted input.",
+      "recommendation": "Use subprocess.run() with a list of arguments and avoid shell interpretation.",
+      "suggested_fix": "Use subprocess.run() with a list of arguments and avoid shell interpretation.",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021-Injection",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/78.html"
+      ],
+      "remediation": "Use subprocess.run() with a list of arguments and avoid shell interpretation.",
+      "fingerprint": "9156ede82f11ba4378f4d6e8f2351958"
+    },
+    {
+      "rule_id": "PY005",
+      "title": "Use of pickle.loads()",
+      "type": "Use of pickle.loads()",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "category": "Unsafe Deserialization",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "line_number": 13,
+      "line": 13,
+      "code_snippet": "     12: def load_data(data):\n>>   13:     return pickle.loads(data)\n     14: ",
+      "snippet": "     12: def load_data(data):\n>>   13:     return pickle.loads(data)\n     14: ",
+      "code": "return pickle.loads(data)",
+      "description": "pickle deserialization may execute arbitrary code when loading untrusted data.",
+      "recommendation": "Do not deserialize untrusted pickle data. Use safer formats such as JSON where possible.",
+      "suggested_fix": "Do not deserialize untrusted pickle data. Use safer formats such as JSON where possible.",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021-Software and Data Integrity Failures",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/502.html"
+      ],
+      "remediation": "Do not deserialize untrusted pickle data. Use JSON or other safe formats.",
+      "fingerprint": "796c7498692b113323c6cead2e28face"
+    },
+    {
+      "rule_id": "PY006",
+      "title": "Use of yaml.load()",
+      "type": "Use of yaml.load()",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "category": "Unsafe Deserialization",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "line_number": 17,
+      "line": 17,
+      "code_snippet": "     16: def parse_yaml(text):\n>>   17:     return yaml.load(text)\n     18: ",
+      "snippet": "     16: def parse_yaml(text):\n>>   17:     return yaml.load(text)\n     18: ",
+      "code": "return yaml.load(text)",
+      "description": "yaml.load() may be unsafe when parsing untrusted YAML content.",
+      "recommendation": "Prefer yaml.safe_load() for untrusted input.",
+      "suggested_fix": "Prefer yaml.safe_load() for untrusted input.",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021-Software and Data Integrity Failures",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/502.html"
+      ],
+      "remediation": "Prefer yaml.safe_load() for untrusted input.",
+      "fingerprint": "7db25af732bb9b824385f1dd824b60f2"
+    },
+    {
+      "rule_id": "PY001",
+      "title": "Use of eval()",
+      "type": "Use of eval()",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "category": "Code Injection",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "line_number": 21,
+      "line": 21,
+      "code_snippet": "     20: def unsafe_eval(x):\n>>   21:     eval(x)\n     22: ",
+      "snippet": "     20: def unsafe_eval(x):\n>>   21:     eval(x)\n     22: ",
+      "code": "eval(x)",
+      "description": "eval() executes dynamic Python code and may allow code injection.",
+      "recommendation": "Avoid eval(). Use safe parsing, explicit logic, or restricted parsing libraries.",
+      "suggested_fix": "Avoid eval(). Use safe parsing, explicit logic, or restricted parsing libraries.",
+      "cwe": "CWE-94",
+      "owasp": "A03:2021-Injection",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/94.html"
+      ],
+      "remediation": "Avoid eval(). Use safe parsing, explicit logic, or restricted parsing libraries.",
+      "fingerprint": "acb874799fd59a46c5eaa9400f26b363"
+    },
+    {
+      "rule_id": "PY003",
+      "title": "Use of os.system()",
+      "type": "Use of os.system()",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "category": "Command Injection",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "line_number": 27,
+      "line": 27,
+      "code_snippet": "     26:     user = input()\n>>   27:     os.system(user)\n     28: ",
+      "snippet": "     26:     user = input()\n>>   27:     os.system(user)\n     28: ",
+      "code": "os.system(user)",
+      "description": "os.system() may lead to command injection if arguments include untrusted input.",
+      "recommendation": "Use subprocess.run() with a list of arguments and avoid shell interpretation.",
+      "suggested_fix": "Use subprocess.run() with a list of arguments and avoid shell interpretation.",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021-Injection",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/78.html"
+      ],
+      "remediation": "Use subprocess.run() with a list of arguments and avoid shell interpretation.",
+      "fingerprint": "d4d85b7bc41cf560dbc42cefe6bd941d"
+    },
+    {
+      "rule_id": "TAINT-CMD",
+      "title": "Taint flow: user input -> os.system",
+      "type": "Taint flow: user input -> os.system",
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "category": "Command Injection",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "line_number": 27,
+      "line": 27,
+      "code_snippet": "     26:     user = input()\n>>   27:     os.system(user)\n     28: ",
+      "snippet": "     26:     user = input()\n>>   27:     os.system(user)\n     28: ",
+      "code": "os.system(user)",
+      "description": "Tainted data from user input flows into os.system, which may allow command injection.",
+      "recommendation": "Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.",
+      "suggested_fix": "Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.",
+      "source": "user input",
+      "sink": "os.system",
+      "explanation": "Tainted data from user input flows into os.system, which may allow command injection.",
+      "taint_flow": true,
+      "cwe": "CWE-78",
+      "owasp": "A03:2021-Injection",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/78.html"
+      ],
+      "remediation": "Use allowlists and avoid shell=True; prefer subprocess with list args.",
+      "fingerprint": "3a0ef529b25de483607fa36534ab0a96"
+    },
+    {
+      "rule_id": "TAINT-SQL",
+      "title": "Taint flow: user input -> cursor.execute",
+      "type": "Taint flow: user input -> cursor.execute",
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "category": "SQL Injection",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/samples/vulnerable_sample.py",
+      "line_number": 34,
+      "line": 34,
+      "code_snippet": "     33:     query = \"SELECT * FROM users WHERE name=\" + name\n>>   34:     cursor.execute(query)",
+      "snippet": "     33:     query = \"SELECT * FROM users WHERE name=\" + name\n>>   34:     cursor.execute(query)",
+      "code": "cursor.execute(query)",
+      "description": "Tainted data from user input flows into cursor.execute, which may allow sql injection.",
+      "recommendation": "Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.",
+      "suggested_fix": "Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.",
+      "source": "user input",
+      "sink": "cursor.execute",
+      "explanation": "Tainted data from user input flows into cursor.execute, which may allow sql injection.",
+      "taint_flow": true,
+      "cwe": "CWE-89",
+      "owasp": "A03:2021-Injection",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/89.html"
+      ],
+      "remediation": "Use parameterized queries or prepared statements.",
+      "fingerprint": "a1c8822198e9b6bbac5bf44f3e42622a"
+    },
+    {
+      "rule_id": "RH011",
+      "title": "Verify sensitive files are not tracked",
+      "type": "Verify sensitive files are not tracked",
+      "severity": "MEDIUM",
+      "confidence": "HIGH",
+      "category": "Repository Hygiene",
+      "file_path": ".gitignore",
+      "file": ".gitignore",
+      "line_number": 0,
+      "line": null,
+      "description": ".gitignore only prevents untracked files from being added; it does not untrack or remove files already in the index. Sensitive or cache files already committed remain in repository history until explicitly removed.",
+      "recommendation": "Run 'git ls-files' to list tracked files. For any .env, __pycache__, *.pyc, or venv paths: use 'git rm --cached <file>' to stop tracking. Rotate any exposed secrets.",
+      "suggested_fix": "Run 'git ls-files' to list tracked files. For any .env, __pycache__, *.pyc, or venv paths: use 'git rm --cached <file>' to stop tracking. Rotate any exposed secrets.",
+      "remediation": "Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv.",
+      "code_snippet": "",
+      "snippet": "",
+      "code": "",
+      "fingerprint": "d089a34b4d5a0aa277d487e8ac780f9a"
+    }
+  ],
+  "scan_errors": []
+}

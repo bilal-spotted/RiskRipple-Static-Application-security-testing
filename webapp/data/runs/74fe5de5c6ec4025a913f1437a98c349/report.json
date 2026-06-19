@@ -1,0 +1,448 @@
+{
+  "target": "C:\\Users\\happy\\Desktop\\ai-repo-security-scanner-main\\benchmark",
+  "files_scanned": 12,
+  "total_findings": 14,
+  "severity_counts": {
+    "CRITICAL": 1,
+    "HIGH": 8,
+    "MEDIUM": 3,
+    "LOW": 2
+  },
+  "repository_risk_score": 136,
+  "risk_level": "Critical",
+  "risk_level_css_class": "risk-critical",
+  "score_breakdown": {
+    "critical_contribution": 10,
+    "high_contribution": 48,
+    "medium_contribution": 9,
+    "low_contribution": 2,
+    "severity_contribution": 69,
+    "taint_flow_contribution": 10,
+    "secret_exposure_contribution": 18,
+    "repository_hygiene_contribution": 3.0,
+    "file_concentration_factor": 4.3,
+    "unique_files_factor": 5.0,
+    "critical_category_contribution": 27
+  },
+  "top_risky_files": [
+    {
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py",
+      "risk_score": 44,
+      "findings_count": 4,
+      "severity_counts": {
+        "CRITICAL": 0,
+        "HIGH": 4,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    {
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py",
+      "risk_score": 18,
+      "findings_count": 2,
+      "severity_counts": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    {
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py",
+      "risk_score": 16,
+      "findings_count": 2,
+      "severity_counts": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    {
+      "file_path": "secret_exposure_vulnerable.py",
+      "risk_score": 13,
+      "findings_count": 1,
+      "severity_counts": {
+        "CRITICAL": 1,
+        "HIGH": 0,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    {
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py",
+      "risk_score": 6,
+      "findings_count": 4,
+      "severity_counts": {
+        "CRITICAL": 0,
+        "HIGH": 0,
+        "MEDIUM": 2,
+        "LOW": 2
+      }
+    }
+  ],
+  "top_risky_categories": [
+    {
+      "category": "Command Injection",
+      "count": 4
+    },
+    {
+      "category": "Cryptography",
+      "count": 4
+    },
+    {
+      "category": "Secrets",
+      "count": 2
+    },
+    {
+      "category": "Unsafe Deserialization",
+      "count": 2
+    },
+    {
+      "category": "Repository Hygiene",
+      "count": 1
+    },
+    {
+      "category": "Secret Exposure",
+      "count": 1
+    }
+  ],
+  "findings": [
+    {
+      "rule_id": "PY003",
+      "title": "Use of os.system()",
+      "type": "Use of os.system()",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "category": "Command Injection",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py",
+      "line_number": 9,
+      "line": 9,
+      "code_snippet": "      8:     user_input = input(\"Enter command: \")\n>>    9:     os.system(user_input)\n     10: ",
+      "snippet": "      8:     user_input = input(\"Enter command: \")\n>>    9:     os.system(user_input)\n     10: ",
+      "code": "os.system(user_input)",
+      "description": "os.system() may lead to command injection if arguments include untrusted input.",
+      "recommendation": "Use subprocess.run() with a list of arguments and avoid shell interpretation.",
+      "suggested_fix": "Use subprocess.run() with a list of arguments and avoid shell interpretation.",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021-Injection",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/78.html"
+      ],
+      "remediation": "Use subprocess.run() with a list of arguments and avoid shell interpretation.",
+      "fingerprint": "3d469966ba7e9601ee95b1e3708245be"
+    },
+    {
+      "rule_id": "TAINT-CMD",
+      "title": "Taint flow: user input -> os.system",
+      "type": "Taint flow: user input -> os.system",
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "category": "Command Injection",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py",
+      "line_number": 9,
+      "line": 9,
+      "code_snippet": "      8:     user_input = input(\"Enter command: \")\n>>    9:     os.system(user_input)\n     10: ",
+      "snippet": "      8:     user_input = input(\"Enter command: \")\n>>    9:     os.system(user_input)\n     10: ",
+      "code": "os.system(user_input)",
+      "description": "Tainted data from user input flows into os.system, which may allow command injection.",
+      "recommendation": "Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.",
+      "suggested_fix": "Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.",
+      "source": "user input",
+      "sink": "os.system",
+      "explanation": "Tainted data from user input flows into os.system, which may allow command injection.",
+      "taint_flow": true,
+      "cwe": "CWE-78",
+      "owasp": "A03:2021-Injection",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/78.html"
+      ],
+      "remediation": "Use allowlists and avoid shell=True; prefer subprocess with list args.",
+      "fingerprint": "c2111c3a29b25f45a47ad7ed1793f44e"
+    },
+    {
+      "rule_id": "PY004",
+      "title": "Use of subprocess.call() with shell=True",
+      "type": "Use of subprocess.call() with shell=True",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "category": "Command Injection",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py",
+      "line_number": 14,
+      "line": 14,
+      "code_snippet": "     13:     cmd = input(\"Command: \")\n>>   14:     subprocess.call(cmd, shell=True)",
+      "snippet": "     13:     cmd = input(\"Command: \")\n>>   14:     subprocess.call(cmd, shell=True)",
+      "code": "subprocess.call(cmd, shell=True)",
+      "description": "shell=True increases command injection risk when command content is not fully trusted.",
+      "recommendation": "Avoid shell=True. Pass command arguments as a list instead.",
+      "suggested_fix": "Avoid shell=True. Pass command arguments as a list instead.",
+      "cwe": "CWE-78",
+      "owasp": "A03:2021-Injection",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/78.html"
+      ],
+      "remediation": "Avoid shell=True. Pass command arguments as a list instead.",
+      "fingerprint": "92d900a5ffe7b126bfbfbd3bf26362ef"
+    },
+    {
+      "rule_id": "TAINT-CMD",
+      "title": "Taint flow: user input -> subprocess.call",
+      "type": "Taint flow: user input -> subprocess.call",
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "category": "Command Injection",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py",
+      "line_number": 14,
+      "line": 14,
+      "code_snippet": "     13:     cmd = input(\"Command: \")\n>>   14:     subprocess.call(cmd, shell=True)",
+      "snippet": "     13:     cmd = input(\"Command: \")\n>>   14:     subprocess.call(cmd, shell=True)",
+      "code": "subprocess.call(cmd, shell=True)",
+      "description": "Tainted data from user input flows into subprocess.call, which may allow command injection.",
+      "recommendation": "Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.",
+      "suggested_fix": "Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.",
+      "source": "user input",
+      "sink": "subprocess.call",
+      "explanation": "Tainted data from user input flows into subprocess.call, which may allow command injection.",
+      "taint_flow": true,
+      "cwe": "CWE-78",
+      "owasp": "A03:2021-Injection",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/78.html"
+      ],
+      "remediation": "Use allowlists and avoid shell=True; prefer subprocess with list args.",
+      "fingerprint": "0cbd6773903ef0f619f0189a73c00a05"
+    },
+    {
+      "rule_id": "PY005",
+      "title": "Use of pickle.loads()",
+      "type": "Use of pickle.loads()",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "category": "Unsafe Deserialization",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py",
+      "line_number": 9,
+      "line": 9,
+      "code_snippet": "      8: def load_config(data):\n>>    9:     return pickle.loads(data)\n     10: ",
+      "snippet": "      8: def load_config(data):\n>>    9:     return pickle.loads(data)\n     10: ",
+      "code": "return pickle.loads(data)",
+      "description": "pickle deserialization may execute arbitrary code when loading untrusted data.",
+      "recommendation": "Do not deserialize untrusted pickle data. Use safer formats such as JSON where possible.",
+      "suggested_fix": "Do not deserialize untrusted pickle data. Use safer formats such as JSON where possible.",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021-Software and Data Integrity Failures",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/502.html"
+      ],
+      "remediation": "Do not deserialize untrusted pickle data. Use JSON or other safe formats.",
+      "fingerprint": "9731db4518f4f8210e7679f4cb932be5"
+    },
+    {
+      "rule_id": "PY006",
+      "title": "Use of yaml.load()",
+      "type": "Use of yaml.load()",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "category": "Unsafe Deserialization",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py",
+      "line_number": 13,
+      "line": 13,
+      "code_snippet": "     12: def parse_yaml(text):\n>>   13:     return yaml.load(text)",
+      "snippet": "     12: def parse_yaml(text):\n>>   13:     return yaml.load(text)",
+      "code": "return yaml.load(text)",
+      "description": "yaml.load() may be unsafe when parsing untrusted YAML content.",
+      "recommendation": "Prefer yaml.safe_load() for untrusted input.",
+      "suggested_fix": "Prefer yaml.safe_load() for untrusted input.",
+      "cwe": "CWE-502",
+      "owasp": "A08:2021-Software and Data Integrity Failures",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/502.html"
+      ],
+      "remediation": "Prefer yaml.safe_load() for untrusted input.",
+      "fingerprint": "a67b6148d0a3653f912693ee42b5bc38"
+    },
+    {
+      "rule_id": "SEC002",
+      "title": "Potential hardcoded API key / token / secret",
+      "type": "Potential hardcoded API key / token / secret",
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "category": "Secrets",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py",
+      "line_number": 3,
+      "line": 3,
+      "code_snippet": "      2: \n>>    3: API_KEY = \"sk-1234567890abcdef\"\n      4: PASSWORD = \"admin123\"",
+      "snippet": "      2: \n>>    3: API_KEY = \"sk-1234567890abcdef\"\n      4: PASSWORD = \"admin123\"",
+      "code": "API_KEY = \"sk-1234567890abcdef\"",
+      "description": "Possible hardcoded credential or token detected.",
+      "recommendation": "Store credentials outside source code and inject them securely at runtime.",
+      "suggested_fix": "Store credentials outside source code and inject them securely at runtime.",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021-Identification and Authentication Failures",
+      "remediation": "Store credentials outside source code and inject them securely at runtime.",
+      "fingerprint": "85385c6dbde12f02eabbe47ee97b6a55"
+    },
+    {
+      "rule_id": "SEC001",
+      "title": "Potential hardcoded password",
+      "type": "Potential hardcoded password",
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "category": "Secrets",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py",
+      "line_number": 4,
+      "line": 4,
+      "code_snippet": "      3: API_KEY = \"sk-1234567890abcdef\"\n>>    4: PASSWORD = \"admin123\"\n      5: AWS_ACCESS_KEY = \"AKIAIOSFODNN7EXAMPLE\"",
+      "snippet": "      3: API_KEY = \"sk-1234567890abcdef\"\n>>    4: PASSWORD = \"admin123\"\n      5: AWS_ACCESS_KEY = \"AKIAIOSFODNN7EXAMPLE\"",
+      "code": "PASSWORD = \"admin123\"",
+      "description": "Possible hardcoded password detected.",
+      "recommendation": "Move secrets to environment variables or a secure secrets manager.",
+      "suggested_fix": "Move secrets to environment variables or a secure secrets manager.",
+      "cwe": "CWE-798",
+      "owasp": "A07:2021-Identification and Authentication Failures",
+      "remediation": "Move secrets to environment variables or a secure secrets manager.",
+      "fingerprint": "013ddeea5983c59be1e7356d5c30ba54"
+    },
+    {
+      "rule_id": "SEC009",
+      "title": "Insecure random for security-sensitive context",
+      "type": "Insecure random for security-sensitive context",
+      "severity": "LOW",
+      "confidence": "LOW",
+      "category": "Cryptography",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py",
+      "line_number": 4,
+      "line": 4,
+      "code_snippet": "      3: import hashlib\n>>    4: import random\n      5: ",
+      "snippet": "      3: import hashlib\n>>    4: import random\n      5: ",
+      "code": "import random",
+      "description": "The `random` module is not suitable for security-sensitive randomness (tokens, secrets, keys).",
+      "recommendation": "Use the `secrets` module for tokens/keys, or `os.urandom` for raw bytes.",
+      "suggested_fix": "Use the `secrets` module for tokens/keys, or `os.urandom` for raw bytes.",
+      "cwe": "CWE-330",
+      "remediation": "Use the secrets module for tokens/keys, or os.urandom for raw bytes.",
+      "fingerprint": "30012f0c0d99fd818c68763331d9d834"
+    },
+    {
+      "rule_id": "SEC005",
+      "title": "Possible insecure MD5 usage",
+      "type": "Possible insecure MD5 usage",
+      "severity": "MEDIUM",
+      "confidence": "MEDIUM",
+      "category": "Cryptography",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py",
+      "line_number": 8,
+      "line": 8,
+      "code_snippet": "      7: def hash_password(pwd):\n>>    8:     return hashlib.md5(pwd.encode()).hexdigest()\n      9: ",
+      "snippet": "      7: def hash_password(pwd):\n>>    8:     return hashlib.md5(pwd.encode()).hexdigest()\n      9: ",
+      "code": "return hashlib.md5(pwd.encode()).hexdigest()",
+      "description": "MD5 is not suitable for security-sensitive cryptographic use.",
+      "recommendation": "Use stronger algorithms such as SHA-256, or password hashing libraries where appropriate.",
+      "suggested_fix": "Use stronger algorithms such as SHA-256, or password hashing libraries where appropriate.",
+      "cwe": "CWE-328",
+      "owasp": "A02:2021-Cryptographic Failures",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/328.html"
+      ],
+      "remediation": "Use SHA-256 or stronger; use password hashing libraries for passwords.",
+      "fingerprint": "6fa33e3a9d911e28f05bcc3dede9fdd1"
+    },
+    {
+      "rule_id": "SEC006",
+      "title": "Possible insecure SHA1 usage",
+      "type": "Possible insecure SHA1 usage",
+      "severity": "MEDIUM",
+      "confidence": "MEDIUM",
+      "category": "Cryptography",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py",
+      "line_number": 12,
+      "line": 12,
+      "code_snippet": "     11: def checksum(data):\n>>   12:     return hashlib.sha1(data).hexdigest()\n     13: ",
+      "snippet": "     11: def checksum(data):\n>>   12:     return hashlib.sha1(data).hexdigest()\n     13: ",
+      "code": "return hashlib.sha1(data).hexdigest()",
+      "description": "SHA-1 is deprecated for many security-sensitive use cases.",
+      "recommendation": "Use SHA-256 or stronger modern cryptographic primitives.",
+      "suggested_fix": "Use SHA-256 or stronger modern cryptographic primitives.",
+      "cwe": "CWE-328",
+      "owasp": "A02:2021-Cryptographic Failures",
+      "references": [
+        "https://cwe.mitre.org/data/definitions/328.html"
+      ],
+      "remediation": "Use SHA-256 or stronger modern cryptographic primitives.",
+      "fingerprint": "58be208851b04a3b0ca0cc87bba3bf72"
+    },
+    {
+      "rule_id": "SEC009",
+      "title": "Insecure random for security-sensitive context",
+      "type": "Insecure random for security-sensitive context",
+      "severity": "LOW",
+      "confidence": "LOW",
+      "category": "Cryptography",
+      "file_path": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py",
+      "file": "C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py",
+      "line_number": 16,
+      "line": 16,
+      "code_snippet": "     15: def gen_token():\n>>   16:     return str(random.randint(0, 10**9))",
+      "snippet": "     15: def gen_token():\n>>   16:     return str(random.randint(0, 10**9))",
+      "code": "return str(random.randint(0, 10**9))",
+      "description": "The `random` module is not suitable for security-sensitive randomness (tokens, secrets, keys).",
+      "recommendation": "Use the `secrets` module for tokens/keys, or `os.urandom` for raw bytes.",
+      "suggested_fix": "Use the `secrets` module for tokens/keys, or `os.urandom` for raw bytes.",
+      "cwe": "CWE-330",
+      "remediation": "Use the secrets module for tokens/keys, or os.urandom for raw bytes.",
+      "fingerprint": "a65949162ed5aa596d66bb6803f8a5de"
+    },
+    {
+      "rule_id": "RH005",
+      "title": "Secret or API key detected in file",
+      "type": "Secret or API key detected in file",
+      "severity": "CRITICAL",
+      "confidence": "HIGH",
+      "category": "Secret Exposure",
+      "file_path": "secret_exposure_vulnerable.py",
+      "file": "secret_exposure_vulnerable.py",
+      "line_number": 0,
+      "line": null,
+      "description": "File content matches secret pattern: AWS access key. Treat as exposed.",
+      "recommendation": "Revoke and rotate the credential immediately. Remove from repo and consider purging from git history.",
+      "suggested_fix": "Revoke and rotate the credential immediately. Remove from repo and consider purging from git history.",
+      "remediation": "Revoke/rotate the key; remove from git; consider purging from history.",
+      "code_snippet": "",
+      "snippet": "",
+      "code": "",
+      "cwe": "CWE-798",
+      "fingerprint": "4f2b525e87d5f135e333209af2f1a5ad"
+    },
+    {
+      "rule_id": "RH011",
+      "title": "Verify sensitive files are not tracked",
+      "type": "Verify sensitive files are not tracked",
+      "severity": "MEDIUM",
+      "confidence": "HIGH",
+      "category": "Repository Hygiene",
+      "file_path": ".gitignore",
+      "file": ".gitignore",
+      "line_number": 0,
+      "line": null,
+      "description": ".gitignore only prevents untracked files from being added; it does not untrack or remove files already in the index. Sensitive or cache files already committed remain in repository history until explicitly removed.",
+      "recommendation": "Run 'git ls-files' to list tracked files. For any .env, __pycache__, *.pyc, or venv paths: use 'git rm --cached <file>' to stop tracking. Rotate any exposed secrets.",
+      "suggested_fix": "Run 'git ls-files' to list tracked files. For any .env, __pycache__, *.pyc, or venv paths: use 'git rm --cached <file>' to stop tracking. Rotate any exposed secrets.",
+      "remediation": "Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv.",
+      "code_snippet": "",
+      "snippet": "",
+      "code": "",
+      "fingerprint": "d089a34b4d5a0aa277d487e8ac780f9a"
+    }
+  ],
+  "scan_errors": []
+}

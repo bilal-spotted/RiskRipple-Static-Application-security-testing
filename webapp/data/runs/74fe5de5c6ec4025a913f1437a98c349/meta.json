@@ -1,0 +1,78 @@
+{
+  "id": "74fe5de5c6ec4025a913f1437a98c349",
+  "status": "completed",
+  "created_at": "2026-04-30T13:52:20.077956Z",
+  "progress": 100,
+  "options": {
+    "target": "C:\\Users\\happy\\Desktop\\ai-repo-security-scanner-main\\benchmark",
+    "workers": 8,
+    "top_files": 5,
+    "formats": [
+      "all"
+    ],
+    "output_dir": "output",
+    "fail_on_severity": null,
+    "fail_on_score": null,
+    "verbose": false,
+    "quiet": false
+  },
+  "target": "C:\\Users\\happy\\Desktop\\ai-repo-security-scanner-main\\benchmark",
+  "events": [
+    {
+      "ts": "2026-04-30T13:52:20.097834Z",
+      "message": "Validating target"
+    },
+    {
+      "ts": "2026-04-30T13:52:20.128854Z",
+      "message": "Collecting source files"
+    },
+    {
+      "ts": "2026-04-30T13:52:20.146377Z",
+      "message": "Scanning repository"
+    },
+    {
+      "ts": "2026-04-30T13:52:20.174732Z",
+      "message": "Checking repository hygiene"
+    },
+    {
+      "ts": "2026-04-30T13:52:20.195112Z",
+      "message": "Enriching and normalizing findings"
+    },
+    {
+      "ts": "2026-04-30T13:52:20.215978Z",
+      "message": "Writing reports"
+    },
+    {
+      "ts": "2026-04-30T13:52:20.288506Z",
+      "message": "Completed"
+    }
+  ],
+  "started_at": "2026-04-30T13:52:20.079633Z",
+  "target_resolved": "C:\\Users\\happy\\Desktop\\ai-repo-security-scanner-main\\benchmark",
+  "finished_at": "2026-04-30T13:52:20.270954Z",
+  "duration_sec": 0.19,
+  "summary": {
+    "files_scanned": 12,
+    "total_findings": 14,
+    "risk_score": 136,
+    "risk_level": "Critical",
+    "severity_counts": {
+      "CRITICAL": 1,
+      "HIGH": 8,
+      "MEDIUM": 3,
+      "LOW": 2
+    }
+  },
+  "output_dir": "C:\\Users\\happy\\Desktop\\ai-repo-security-scanner-main\\output",
+  "run_reports_dir": "C:\\Users\\happy\\Desktop\\ai-repo-security-scanner-main\\webapp\\data\\runs\\74fe5de5c6ec4025a913f1437a98c349\\reports",
+  "formats": [
+    "all"
+  ],
+  "thresholds": {
+    "severity_threshold": null,
+    "score_threshold": null,
+    "severity_breached": false,
+    "score_breached": false
+  },
+  "exit_code": 0
+}

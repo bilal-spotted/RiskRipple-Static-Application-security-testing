@@ -1,0 +1,431 @@
+# Rule metadata for Risk Ripple
+# Schema: rule_id, title, description, category, severity, confidence,
+#         detection_type (ast|regex|taint|hygiene), language, cwe, owasp, remediation, references
+
+rules:
+  # --- AST (Python dangerous calls) ---
+  - rule_id: python-eval-use
+    title: Use of eval()
+    description: eval() executes dynamic Python code and may allow code injection when given untrusted input.
+    category: Code Injection
+    severity: HIGH
+    confidence: HIGH
+    detection_type: ast
+    language: python
+    cwe: CWE-94
+    owasp: A03:2021-Injection
+    remediation: Avoid eval(). Use safe parsing, explicit logic, or restricted parsing libraries.
+    references:
+      - https://cwe.mitre.org/data/definitions/94.html
+
+  - rule_id: python-exec-use
+    title: Use of exec()
+    description: exec() executes dynamic Python code and can introduce severe security risk.
+    category: Code Injection
+    severity: HIGH
+    confidence: HIGH
+    detection_type: ast
+    language: python
+    cwe: CWE-95
+    owasp: A03:2021-Injection
+    remediation: Avoid exec(). Replace with explicit logic or safer alternatives.
+    references:
+      - https://cwe.mitre.org/data/definitions/95.html
+
+  - rule_id: python-os-system
+    title: Use of os.system()
+    description: os.system() may lead to command injection if arguments include untrusted input.
+    category: Command Injection
+    severity: HIGH
+    confidence: HIGH
+    detection_type: ast
+    language: python
+    cwe: CWE-78
+    owasp: A03:2021-Injection
+    remediation: Use subprocess.run() with a list of arguments and avoid shell interpretation.
+    references:
+      - https://cwe.mitre.org/data/definitions/78.html
+
+  - rule_id: python-subprocess-shell-true
+    title: Subprocess with shell=True
+    description: shell=True increases command injection risk when command content is not fully trusted.
+    category: Command Injection
+    severity: HIGH
+    confidence: HIGH
+    detection_type: ast
+    language: python
+    cwe: CWE-78
+    owasp: A03:2021-Injection
+    remediation: Avoid shell=True. Pass command arguments as a list instead.
+    references:
+      - https://cwe.mitre.org/data/definitions/78.html
+
+  - rule_id: python-pickle-loads
+    title: Unsafe pickle deserialization
+    description: pickle deserialization may execute arbitrary code when loading untrusted data.
+    category: Unsafe Deserialization
+    severity: HIGH
+    confidence: HIGH
+    detection_type: ast
+    language: python
+    cwe: CWE-502
+    owasp: A08:2021-Software and Data Integrity Failures
+    remediation: Do not deserialize untrusted pickle data. Use JSON or other safe formats.
+    references:
+      - https://cwe.mitre.org/data/definitions/502.html
+
+  - rule_id: python-yaml-load
+    title: Use of yaml.load()
+    description: yaml.load() may be unsafe when parsing untrusted YAML content.
+    category: Unsafe Deserialization
+    severity: HIGH
+    confidence: HIGH
+    detection_type: ast
+    language: python
+    cwe: CWE-502
+    owasp: A08:2021-Software and Data Integrity Failures
+    remediation: Prefer yaml.safe_load() for untrusted input.
+    references:
+      - https://cwe.mitre.org/data/definitions/502.html
+
+  - rule_id: python-compile
+    title: Use of compile()
+    description: compile() builds code objects from strings; with untrusted input it can enable code execution (e.g. via exec()).
+    category: Code Injection
+    severity: HIGH
+    confidence: MEDIUM
+    detection_type: ast
+    language: python
+    cwe: CWE-94
+    owasp: A03:2021-Injection
+    remediation: Avoid compiling untrusted input. Use safe parsing or restricted modes; prefer structured data over code strings.
+    references:
+      - https://cwe.mitre.org/data/definitions/94.html
+
+  # --- Regex (secrets / config / crypto) ---
+  - rule_id: secret-hardcoded-password
+    title: Potential hardcoded password
+    description: Possible hardcoded password detected in source.
+    category: Secrets
+    severity: HIGH
+    confidence: MEDIUM
+    detection_type: regex
+    language: any
+    cwe: CWE-798
+    owasp: A07:2021-Identification and Authentication Failures
+    remediation: Move secrets to environment variables or a secure secrets manager.
+    references: []
+
+  - rule_id: secret-api-key
+    title: Potential hardcoded API key or token
+    description: Possible hardcoded credential or token detected.
+    category: Secrets
+    severity: HIGH
+    confidence: MEDIUM
+    detection_type: regex
+    language: any
+    cwe: CWE-798
+    owasp: A07:2021-Identification and Authentication Failures
+    remediation: Store credentials outside source code and inject them securely at runtime.
+    references: []
+
+  - rule_id: secret-openai-key
+    title: Potential OpenAI-style API key
+    description: Pattern matches OpenAI or similar API key format in source.
+    category: Secrets
+    severity: HIGH
+    confidence: MEDIUM
+    detection_type: regex
+    language: any
+    cwe: CWE-798
+    owasp: A07:2021-Identification and Authentication Failures
+    remediation: Never commit API keys. Use environment variables or secrets manager.
+    references: []
+
+  - rule_id: secret-aws-key
+    title: Potential AWS access key
+    description: Pattern matches AWS access key format in source.
+    category: Secrets
+    severity: HIGH
+    confidence: MEDIUM
+    detection_type: regex
+    language: any
+    cwe: CWE-798
+    owasp: A07:2021-Identification and Authentication Failures
+    remediation: Use IAM roles or environment variables; never commit access keys.
+    references: []
+
+  - rule_id: secret-bearer-token
+    title: Potential hardcoded bearer token
+    description: Possible hardcoded bearer token detected.
+    category: Secrets
+    severity: HIGH
+    confidence: MEDIUM
+    detection_type: regex
+    language: any
+    cwe: CWE-798
+    remediation: Remove tokens from source code and load them securely.
+    references: []
+
+  - rule_id: secret-private-key-material
+    title: Potential private key material in source
+    description: Private key material appears to be present in source code.
+    category: Secrets
+    severity: HIGH
+    confidence: HIGH
+    detection_type: regex
+    language: any
+    cwe: CWE-321
+    owasp: A02:2021-Cryptographic Failures
+    remediation: Remove the key from the repository and rotate/revoke the affected credentials.
+    references: []
+
+  - rule_id: insecure-md5
+    title: Insecure MD5 usage
+    description: MD5 is not suitable for security-sensitive cryptographic use.
+    category: Cryptography
+    severity: MEDIUM
+    confidence: MEDIUM
+    detection_type: regex
+    language: python
+    cwe: CWE-328
+    owasp: A02:2021-Cryptographic Failures
+    remediation: Use SHA-256 or stronger; use password hashing libraries for passwords.
+    references:
+      - https://cwe.mitre.org/data/definitions/328.html
+
+  - rule_id: insecure-sha1
+    title: Insecure SHA-1 usage
+    description: SHA-1 is deprecated for many security-sensitive use cases.
+    category: Cryptography
+    severity: MEDIUM
+    confidence: MEDIUM
+    detection_type: regex
+    language: python
+    cwe: CWE-328
+    owasp: A02:2021-Cryptographic Failures
+    remediation: Use SHA-256 or stronger modern cryptographic primitives.
+    references:
+      - https://cwe.mitre.org/data/definitions/328.html
+
+  - rule_id: insecure-random
+    title: Insecure random for security-sensitive context
+    description: The random module is not cryptographically secure for tokens or secrets.
+    category: Cryptography
+    severity: LOW
+    confidence: LOW
+    detection_type: regex
+    language: python
+    cwe: CWE-330
+    remediation: Use the secrets module for tokens/keys, or os.urandom for raw bytes.
+    references: []
+
+  - rule_id: requests-verify-false
+    title: TLS certificate verification disabled
+    description: Disabling certificate verification weakens transport security.
+    category: TLS/SSL
+    severity: HIGH
+    confidence: HIGH
+    detection_type: regex
+    language: any
+    cwe: CWE-295
+    owasp: A07:2021-Identification and Authentication Failures
+    remediation: Enable certificate verification and trust valid CA certificates.
+    references:
+      - https://cwe.mitre.org/data/definitions/295.html
+
+  - rule_id: flask-debug-true
+    title: Flask debug mode enabled
+    description: Debug mode may expose sensitive information in production.
+    category: Insecure Configuration
+    severity: MEDIUM
+    confidence: HIGH
+    detection_type: regex
+    language: any
+    cwe: CWE-489
+    owasp: A05:2021-Security Misconfiguration
+    remediation: Disable debug mode in production deployments.
+    references: []
+
+  - rule_id: insecure-ssl-protocol
+    title: Insecure SSL/TLS protocol settings
+    description: Older SSL/TLS protocol versions are insecure or deprecated.
+    category: TLS/SSL
+    severity: MEDIUM
+    confidence: MEDIUM
+    detection_type: regex
+    language: any
+    cwe: CWE-326
+    remediation: Use modern TLS defaults and avoid forcing legacy protocol versions.
+    references: []
+
+  # --- Taint ---
+  - rule_id: command-injection-taint
+    title: Taint flow to command execution
+    description: Tainted user input flows into shell/process execution; may allow command injection.
+    category: Command Injection
+    severity: HIGH
+    confidence: MEDIUM
+    detection_type: taint
+    language: python
+    cwe: CWE-78
+    owasp: A03:2021-Injection
+    remediation: Use allowlists and avoid shell=True; prefer subprocess with list args.
+    references:
+      - https://cwe.mitre.org/data/definitions/78.html
+
+  - rule_id: sql-injection-taint
+    title: Taint flow to SQL execution
+    description: Tainted user input flows into SQL execution; may allow SQL injection.
+    category: SQL Injection
+    severity: HIGH
+    confidence: MEDIUM
+    detection_type: taint
+    language: python
+    cwe: CWE-89
+    owasp: A03:2021-Injection
+    remediation: Use parameterized queries or prepared statements.
+    references:
+      - https://cwe.mitre.org/data/definitions/89.html
+
+  - rule_id: path-traversal-taint
+    title: Taint flow to file path
+    description: Tainted user input flows into file open path; may allow path traversal.
+    category: Path Traversal
+    severity: MEDIUM
+    confidence: MEDIUM
+    detection_type: taint
+    language: python
+    cwe: CWE-22
+    owasp: A01:2021-Broken Access Control
+    remediation: Validate and sanitize paths; avoid user-controlled paths.
+    references:
+      - https://cwe.mitre.org/data/definitions/22.html
+
+  - rule_id: taint-dangerous-sink
+    title: Taint flow to dangerous sink
+    description: Tainted data reaches a dangerous sink.
+    category: Taint Analysis
+    severity: HIGH
+    confidence: MEDIUM
+    detection_type: taint
+    language: python
+    remediation: Validate and sanitize user input before use in sensitive operations.
+    references: []
+
+  # --- Repository hygiene ---
+  - rule_id: repo-pycache-dir
+    title: Tracked cache or build directory
+    description: Directory such as __pycache__ should not be committed; it is generated/cache content.
+    category: Repository Hygiene
+    severity: MEDIUM
+    confidence: HIGH
+    detection_type: hygiene
+    language: any
+    remediation: Add to .gitignore and remove from index if already tracked (git rm -r --cached).
+    references: []
+
+  - rule_id: repo-env-file
+    title: Environment or secret file tracked
+    description: Environment or secret-bearing file (e.g. .env) should not be committed.
+    category: Sensitive Artifacts
+    severity: HIGH
+    confidence: HIGH
+    detection_type: hygiene
+    language: any
+    cwe: CWE-798
+    remediation: Add .env to .gitignore; revoke/rotate any exposed secrets; git rm --cached.
+    references: []
+
+  - rule_id: repo-private-key
+    title: Private key or certificate artifact
+    description: Private key or certificate file should never be committed.
+    category: Secret Exposure
+    severity: HIGH
+    confidence: HIGH
+    detection_type: hygiene
+    language: any
+    cwe: CWE-321
+    remediation: Revoke/rotate the key; remove from repo; add *.pem, *.key, id_rsa to .gitignore.
+    references: []
+
+  - rule_id: repo-pyc-artifact
+    title: Python bytecode file tracked
+    description: Compiled .pyc file should not be committed.
+    category: Repository Hygiene
+    severity: LOW
+    confidence: HIGH
+    detection_type: hygiene
+    language: python
+    remediation: Add *.pyc and __pycache__/ to .gitignore; git rm --cached '*.pyc'.
+    references: []
+
+  - rule_id: repo-pyo-artifact
+    title: Python optimized bytecode file tracked
+    description: Compiled .pyo file should not be committed.
+    category: Repository Hygiene
+    severity: LOW
+    confidence: HIGH
+    detection_type: hygiene
+    language: python
+    remediation: Add *.pyo to .gitignore; git rm --cached '*.pyo'.
+    references: []
+
+  - rule_id: repo-secret-in-file
+    title: Secret or API key detected in file
+    description: File content matches secret/API key pattern; treat as exposed.
+    category: Secret Exposure
+    severity: CRITICAL
+    confidence: HIGH
+    detection_type: hygiene
+    language: any
+    cwe: CWE-798
+    remediation: Revoke/rotate the key; remove from git; consider purging from history.
+    references: []
+
+  - rule_id: repo-gitignore-missing
+    title: .gitignore missing critical patterns
+    description: .gitignore does not include recommended patterns; rules do not remove already tracked files.
+    category: Repository Hygiene
+    severity: HIGH
+    confidence: HIGH
+    detection_type: hygiene
+    language: any
+    remediation: Add .env, __pycache__/, *.pyc, *.pyo, venv/ to .gitignore; git rm --cached for tracked sensitive files.
+    references: []
+
+  - rule_id: repo-gitignore-tracked
+    title: Verify sensitive files are not tracked
+    description: .gitignore rules do not remove files already tracked by git.
+    category: Repository Hygiene
+    severity: MEDIUM
+    confidence: HIGH
+    detection_type: hygiene
+    language: any
+    remediation: Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv.
+    references: []
+
+  # Regex fallbacks (eval/exec in non-Python files)
+  - rule_id: python-eval-use-regex
+    title: Possible eval usage
+    description: eval() may execute untrusted input (detected by pattern).
+    category: Code Injection
+    severity: HIGH
+    confidence: LOW
+    detection_type: regex
+    language: any
+    cwe: CWE-94
+    remediation: Avoid eval(). Use safe parsing or explicit logic.
+    references: []
+
+  - rule_id: python-exec-use-regex
+    title: Possible exec usage
+    description: exec() may execute untrusted input (detected by pattern).
+    category: Code Injection
+    severity: HIGH
+    confidence: LOW
+    detection_type: regex
+    language: any
+    cwe: CWE-95
+    remediation: Avoid exec(). Use safer explicit logic.
+    references: []

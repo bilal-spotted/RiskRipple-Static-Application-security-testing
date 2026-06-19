@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Repo Security Scanner Report</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --panel: #121a2b;
+            --panel-2: #172033;
+            --border: #27324a;
+            --text: #e7ecf3;
+            --muted: #95a2b8;
+            --accent: #67b7ff;
+            --critical: #e63946;
+            --high: #ff5d73;
+            --medium: #ffb84d;
+            --low: #5fd0a5;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+            --mono: Consolas, Menlo, Monaco, "Courier New", monospace;
+            --sans: Inter, Segoe UI, Roboto, Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, #0a0f1d 0%, #0b1020 100%);
+            color: var(--text);
+            font-family: var(--sans);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 28px 20px 50px;
+        }
+
+        .header {
+            margin-bottom: 24px;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: 0.2px;
+        }
+
+        .subtitle {
+            margin-top: 10px;
+            color: var(--muted);
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        .panel {
+            background: rgba(18, 26, 43, 0.95);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .section {
+            padding: 18px 18px 16px;
+            margin-bottom: 18px;
+        }
+
+        .section-title {
+            margin: 0 0 14px 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            background: linear-gradient(180deg, rgba(23,32,51,0.98), rgba(18,26,43,0.98));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .card-label {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        .risk-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .risk-pill {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+        }
+
+        .risk-high {
+            background: rgba(255, 93, 115, 0.12);
+            color: var(--high);
+            border-color: rgba(255, 93, 115, 0.28);
+        }
+
+        .risk-medium {
+            background: rgba(255, 184, 77, 0.12);
+            color: var(--medium);
+            border-color: rgba(255, 184, 77, 0.28);
+        }
+
+        .risk-low {
+            background: rgba(95, 208, 165, 0.12);
+            color: var(--low);
+            border-color: rgba(95, 208, 165, 0.28);
+        }
+
+        .risk-critical {
+            background: rgba(230, 57, 70, 0.15);
+            color: var(--critical);
+            border-color: rgba(230, 57, 70, 0.35);
+        }
+
+        .risk-moderate {
+            background: rgba(255, 184, 77, 0.12);
+            color: var(--medium);
+            border-color: rgba(255, 184, 77, 0.28);
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bar-label {
+            min-width: 90px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 24px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 8px;
+            min-width: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .breakdown-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .breakdown-table th {
+            text-align: left;
+            padding: 10px 12px;
+            color: var(--muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .breakdown-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(39, 50, 74, 0.5);
+        }
+
+        .breakdown-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 260px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: #0f1627;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(103, 183, 255, 0.14);
+        }
+
+        .small-note {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 860px;
+            background: rgba(18, 26, 43, 0.75);
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            background: #101828;
+            z-index: 1;
+            text-align: left;
+            font-size: 12px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: #b9c4d8;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(39, 50, 74, 0.7);
+            vertical-align: top;
+            font-size: 14px;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 68px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            border: 1px solid transparent;
+        }
+
+        .badge-high {
+            color: var(--high);
+            background: rgba(255, 93, 115, 0.12);
+            border-color: rgba(255, 93, 115, 0.28);
+        }
+
+        .badge-medium {
+            color: var(--medium);
+            background: rgba(255, 184, 77, 0.12);
+            border-color: rgba(255, 184, 77, 0.28);
+        }
+
+        .badge-low {
+            color: var(--low);
+            background: rgba(95, 208, 165, 0.12);
+            border-color: rgba(95, 208, 165, 0.28);
+        }
+
+        .badge-critical {
+            color: var(--critical);
+            background: rgba(230, 57, 70, 0.15);
+            border-color: rgba(230, 57, 70, 0.35);
+        }
+
+        .sub-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 11px;
+            color: #b8c4d8;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 999px;
+            margin-top: 6px;
+        }
+
+        .path {
+            font-family: var(--mono);
+            font-size: 13px;
+            color: #d8e1ef;
+            word-break: break-word;
+        }
+
+        .code-block {
+            margin-top: 8px;
+            background: #0a1220;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            color: #d8e7ff;
+            font-family: var(--mono);
+            font-size: 12px;
+            line-height: 1.55;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        details {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 8px 10px;
+        }
+
+        details summary {
+            cursor: pointer;
+            color: #cfe0ff;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        .empty-state {
+            padding: 18px;
+            color: var(--muted);
+            text-align: center;
+            border: 1px dashed var(--border);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .footer-note {
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .error-item {
+            padding: 12px 14px;
+            background: rgba(255, 93, 115, 0.08);
+            border: 1px solid rgba(255, 93, 115, 0.18);
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .error-path {
+            font-family: var(--mono);
+            color: #ffd8dd;
+            font-size: 13px;
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+
+        .error-msg {
+            color: #f6c8cf;
+            font-size: 13px;
+        }
+
+        @media (max-width: 760px) {
+            .title {
+                font-size: 26px;
+            }
+
+            .container {
+                padding: 20px 14px 40px;
+            }
+
+            .section {
+                padding: 16px 14px 14px;
+            }
+
+            .card-value {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">AI Repo Security Scanner</h1>
+            <div class="subtitle">
+                <strong>Scan Target:</strong> C:\Users\happy\Desktop\ai-repo-security-scanner-main\benchmark
+            </div>
+        </div>
+
+        <div class="panel section">
+            <h2 class="section-title">Risk Summary</h2>
+            
+    <div class="cards">
+        <div class="card">
+            <div class="card-label">Files Scanned</div>
+            <div class="card-value">12</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Total Findings</div>
+            <div class="card-value">14</div>
+        </div>
+        <div class="card">
+            <div class="card-label">Risk Score</div>
+            <div class="card-value risk-score">
+                136
+                <span class="risk-pill risk-critical">Critical</span>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-label">CRITICAL</div>
+            <div class="card-value" style="color: var(--critical);">1</div>
+        </div>
+        <div class="card">
+            <div class="card-label">HIGH</div>
+            <div class="card-value" style="color: var(--high);">8</div>
+        </div>
+        <div class="card">
+            <div class="card-label">MEDIUM</div>
+            <div class="card-value" style="color: var(--medium);">3</div>
+        </div>
+        <div class="card">
+            <div class="card-label">LOW</div>
+            <div class="card-value" style="color: var(--low);">2</div>
+        </div>
+    </div>
+    
+        </div>
+
+        <div class="panel section">
+            <h2 class="section-title">Risk Score Explanation</h2>
+            
+    <p class="muted" style="margin-bottom: 14px;">
+        The repository risk score is the sum of weighted contributions. Level: <strong>Critical</strong>.
+    </p>
+    <div class="table-wrap">
+        <table class="breakdown-table">
+            <thead>
+                <tr><th>Factor</th><th>Contribution</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>CRITICAL findings × 10</td><td>10</td></tr><tr><td>HIGH findings × 6</td><td>48</td></tr><tr><td>MEDIUM findings × 3</td><td>9</td></tr><tr><td>LOW findings × 1</td><td>2</td></tr><tr><td>Total severity score</td><td>69</td></tr><tr><td>Taint-flow findings bonus</td><td>10</td></tr><tr><td>Secret exposure bonus</td><td>18</td></tr><tr><td>Repository hygiene contribution</td><td>3.0</td></tr><tr><td>File concentration factor</td><td>4.3</td></tr><tr><td>Unique vulnerable files factor</td><td>5.0</td></tr><tr><td>Critical category bonus (e.g. injection, secrets)</td><td>27</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+        </div>
+
+        <div class="panel section">
+            <h2 class="section-title">Severity Distribution</h2>
+            <div class="bar-chart"><div class="bar-row"><span class="bar-label" style="color: var(--critical);">CRITICAL</span><div class="bar-track"><div class="bar-fill" style="width:12.5%; background: var(--critical);"></div></div><span class="muted" style="min-width: 60px;">1 (7%)</span></div><div class="bar-row"><span class="bar-label" style="color: var(--high);">HIGH</span><div class="bar-track"><div class="bar-fill" style="width:100.0%; background: var(--high);"></div></div><span class="muted" style="min-width: 60px;">8 (57%)</span></div><div class="bar-row"><span class="bar-label" style="color: var(--medium);">MEDIUM</span><div class="bar-track"><div class="bar-fill" style="width:37.5%; background: var(--medium);"></div></div><span class="muted" style="min-width: 60px;">3 (21%)</span></div><div class="bar-row"><span class="bar-label" style="color: var(--low);">LOW</span><div class="bar-track"><div class="bar-fill" style="width:25.0%; background: var(--low);"></div></div><span class="muted" style="min-width: 60px;">2 (14%)</span></div></div>
+        </div>
+
+        <div class="panel section">
+            <h2 class="section-title">Top Risky Rule Categories</h2>
+            
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Category</th><th>Findings</th></tr>
+            </thead>
+            <tbody>
+                <tr><td class="path">Command Injection</td><td><strong>4</strong> findings</td></tr><tr><td class="path">Cryptography</td><td><strong>4</strong> findings</td></tr><tr><td class="path">Secrets</td><td><strong>2</strong> findings</td></tr><tr><td class="path">Unsafe Deserialization</td><td><strong>2</strong> findings</td></tr><tr><td class="path">Repository Hygiene</td><td><strong>1</strong> findings</td></tr><tr><td class="path">Secret Exposure</td><td><strong>1</strong> findings</td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+        </div>
+
+        <div class="panel section">
+            <h2 class="section-title">Top Risky Files</h2>
+            
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>File</th>
+                    <th>Risk Score</th>
+                    <th>Findings</th>
+                    <th>Severity Breakdown</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py</td>
+            <td>44</td>
+            <td>4</td>
+            <td>
+                
+                <span class="badge badge-high">HIGH 4</span>
+                <span class="badge badge-medium" style="margin-left:6px;">MED 0</span>
+                <span class="badge badge-low" style="margin-left:6px;">LOW 0</span>
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py</td>
+            <td>18</td>
+            <td>2</td>
+            <td>
+                
+                <span class="badge badge-high">HIGH 2</span>
+                <span class="badge badge-medium" style="margin-left:6px;">MED 0</span>
+                <span class="badge badge-low" style="margin-left:6px;">LOW 0</span>
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py</td>
+            <td>16</td>
+            <td>2</td>
+            <td>
+                
+                <span class="badge badge-high">HIGH 2</span>
+                <span class="badge badge-medium" style="margin-left:6px;">MED 0</span>
+                <span class="badge badge-low" style="margin-left:6px;">LOW 0</span>
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="path">secret_exposure_vulnerable.py</td>
+            <td>13</td>
+            <td>1</td>
+            <td>
+                <span class="badge badge-critical">CRIT 1</span>
+                <span class="badge badge-high">HIGH 0</span>
+                <span class="badge badge-medium" style="margin-left:6px;">MED 0</span>
+                <span class="badge badge-low" style="margin-left:6px;">LOW 0</span>
+            </td>
+        </tr>
+        
+        <tr>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py</td>
+            <td>6</td>
+            <td>4</td>
+            <td>
+                
+                <span class="badge badge-high">HIGH 0</span>
+                <span class="badge badge-medium" style="margin-left:6px;">MED 2</span>
+                <span class="badge badge-low" style="margin-left:6px;">LOW 2</span>
+            </td>
+        </tr>
+        
+            </tbody>
+        </table>
+    </div>
+    
+        </div>
+
+        <div class="panel section">
+            <h2 class="section-title">Repository Hygiene Issues</h2>
+            <div class="small-note">
+                Tracked sensitive files, .gitignore gaps, and remediation guidance.
+            </div>
+            <div style="height: 12px;"></div>
+            
+    <div class="table-wrap">
+        <table id="findingsTable">
+            <thead>
+                <tr>
+                    <th>Severity</th>
+                    <th>Finding</th>
+                    <th>File</th>
+                    <th>Line</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr data-search="CRITICAL HIGH Secret Exposure RH005 Secret or API key detected in file secret_exposure_vulnerable.py  File content matches secret pattern: AWS access key. Treat as exposed. Revoke and rotate the credential immediately. Remove from repo and consider purging from git history. Revoke/rotate the key; remove from git; consider purging from history. CWE-798  ">
+            <td><span class="badge badge-critical">CRITICAL</span><div class="sub-badge">Confidence: HIGH</div></td>
+            <td>
+                <strong>Secret or API key detected in file</strong>
+                <div class="muted" style="margin-top:4px;">RH005 · Secret Exposure</div>
+            </td>
+            <td class="path">secret_exposure_vulnerable.py</td>
+            <td></td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> File content matches secret pattern: AWS access key. Treat as exposed.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Revoke and rotate the credential immediately. Remove from repo and consider purging from git history.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Revoke/rotate the key; remove from git; consider purging from history.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-798</div>
+                    
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="MEDIUM HIGH Repository Hygiene RH011 Verify sensitive files are not tracked .gitignore  .gitignore only prevents untracked files from being added; it does not untrack or remove files already in the index. Sensitive or cache files already committed remain in repository history until explicitly removed. Run &#x27;git ls-files&#x27; to list tracked files. For any .env, __pycache__, *.pyc, or venv paths: use &#x27;git rm --cached &lt;file&gt;&#x27; to stop tracking. Rotate any exposed secrets. Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv.   ">
+            <td><span class="badge badge-medium">MEDIUM</span><div class="sub-badge">Confidence: HIGH</div></td>
+            <td>
+                <strong>Verify sensitive files are not tracked</strong>
+                <div class="muted" style="margin-top:4px;">RH011 · Repository Hygiene</div>
+            </td>
+            <td class="path">.gitignore</td>
+            <td></td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> .gitignore only prevents untracked files from being added; it does not untrack or remove files already in the index. Sensitive or cache files already committed remain in repository history until explicitly removed.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Run &#x27;git ls-files&#x27; to list tracked files. For any .env, __pycache__, *.pyc, or venv paths: use &#x27;git rm --cached &lt;file&gt;&#x27; to stop tracking. Rotate any exposed secrets.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv.</div>
+                    
+                    
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+            </tbody>
+        </table>
+    </div>
+    
+        </div>
+
+        <div class="panel section">
+            <h2 class="section-title">Taint Flow Findings</h2>
+            <div class="small-note">
+                Data flow from sources (e.g. input(), request.args) to dangerous sinks.
+            </div>
+            <div style="height: 12px;"></div>
+            
+    <div class="table-wrap">
+        <table id="findingsTable">
+            <thead>
+                <tr>
+                    <th>Severity</th>
+                    <th>Finding</th>
+                    <th>File</th>
+                    <th>Line</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr data-search="HIGH MEDIUM Command Injection TAINT-CMD Taint flow: user input -&gt; os.system C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py 9 Tainted data from user input flows into os.system, which may allow command injection. Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True. Use allowlists and avoid shell=True; prefer subprocess with list args. CWE-78 A03:2021-Injection       8:     user_input = input(&quot;Enter command: &quot;)
+&gt;&gt;    9:     os.system(user_input)
+     10: ">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: MEDIUM</div></td>
+            <td>
+                <strong>Taint flow: user input -&gt; os.system</strong>
+                <div class="muted" style="margin-top:4px;">TAINT-CMD · Command Injection</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py</td>
+            <td>9</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> Tainted data from user input flows into os.system, which may allow command injection.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Use allowlists and avoid shell=True; prefer subprocess with list args.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-78, A03:2021-Injection</div>
+                    <div class='code-block'>      8:     user_input = input(&quot;Enter command: &quot;)
+&gt;&gt;    9:     os.system(user_input)
+     10: </div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="HIGH MEDIUM Command Injection TAINT-CMD Taint flow: user input -&gt; subprocess.call C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py 14 Tainted data from user input flows into subprocess.call, which may allow command injection. Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True. Use allowlists and avoid shell=True; prefer subprocess with list args. CWE-78 A03:2021-Injection      13:     cmd = input(&quot;Command: &quot;)
+&gt;&gt;   14:     subprocess.call(cmd, shell=True)">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: MEDIUM</div></td>
+            <td>
+                <strong>Taint flow: user input -&gt; subprocess.call</strong>
+                <div class="muted" style="margin-top:4px;">TAINT-CMD · Command Injection</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py</td>
+            <td>14</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> Tainted data from user input flows into subprocess.call, which may allow command injection.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Use allowlists and avoid shell=True; prefer subprocess with list args.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-78, A03:2021-Injection</div>
+                    <div class='code-block'>     13:     cmd = input(&quot;Command: &quot;)
+&gt;&gt;   14:     subprocess.call(cmd, shell=True)</div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+            </tbody>
+        </table>
+    </div>
+    
+        </div>
+
+        <div class="panel section">
+            <div class="toolbar">
+                <h2 class="section-title" style="margin:0;">Findings</h2>
+                <div class="search-box">
+                    <input
+                        id="findingSearch"
+                        class="search-input"
+                        type="text"
+                        placeholder="Search by severity, rule, file, category, line, or code..."
+                        onkeyup="filterFindings()"
+                    >
+                </div>
+            </div>
+            <div class="small-note">
+                Total findings: <strong>14</strong>
+            </div>
+            <div style="height: 12px;"></div>
+            
+    <div class="table-wrap">
+        <table id="findingsTable">
+            <thead>
+                <tr>
+                    <th>Severity</th>
+                    <th>Finding</th>
+                    <th>File</th>
+                    <th>Line</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+        <tr data-search="HIGH HIGH Command Injection PY003 Use of os.system() C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py 9 os.system() may lead to command injection if arguments include untrusted input. Use subprocess.run() with a list of arguments and avoid shell interpretation. Use subprocess.run() with a list of arguments and avoid shell interpretation. CWE-78 A03:2021-Injection       8:     user_input = input(&quot;Enter command: &quot;)
+&gt;&gt;    9:     os.system(user_input)
+     10: ">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: HIGH</div></td>
+            <td>
+                <strong>Use of os.system()</strong>
+                <div class="muted" style="margin-top:4px;">PY003 · Command Injection</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py</td>
+            <td>9</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> os.system() may lead to command injection if arguments include untrusted input.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Use subprocess.run() with a list of arguments and avoid shell interpretation.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Use subprocess.run() with a list of arguments and avoid shell interpretation.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-78, A03:2021-Injection</div>
+                    <div class='code-block'>      8:     user_input = input(&quot;Enter command: &quot;)
+&gt;&gt;    9:     os.system(user_input)
+     10: </div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="HIGH MEDIUM Command Injection TAINT-CMD Taint flow: user input -&gt; os.system C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py 9 Tainted data from user input flows into os.system, which may allow command injection. Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True. Use allowlists and avoid shell=True; prefer subprocess with list args. CWE-78 A03:2021-Injection       8:     user_input = input(&quot;Enter command: &quot;)
+&gt;&gt;    9:     os.system(user_input)
+     10: ">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: MEDIUM</div></td>
+            <td>
+                <strong>Taint flow: user input -&gt; os.system</strong>
+                <div class="muted" style="margin-top:4px;">TAINT-CMD · Command Injection</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py</td>
+            <td>9</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> Tainted data from user input flows into os.system, which may allow command injection.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Use allowlists and avoid shell=True; prefer subprocess with list args.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-78, A03:2021-Injection</div>
+                    <div class='code-block'>      8:     user_input = input(&quot;Enter command: &quot;)
+&gt;&gt;    9:     os.system(user_input)
+     10: </div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="HIGH HIGH Command Injection PY004 Use of subprocess.call() with shell=True C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py 14 shell=True increases command injection risk when command content is not fully trusted. Avoid shell=True. Pass command arguments as a list instead. Avoid shell=True. Pass command arguments as a list instead. CWE-78 A03:2021-Injection      13:     cmd = input(&quot;Command: &quot;)
+&gt;&gt;   14:     subprocess.call(cmd, shell=True)">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: HIGH</div></td>
+            <td>
+                <strong>Use of subprocess.call() with shell=True</strong>
+                <div class="muted" style="margin-top:4px;">PY004 · Command Injection</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py</td>
+            <td>14</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> shell=True increases command injection risk when command content is not fully trusted.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Avoid shell=True. Pass command arguments as a list instead.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Avoid shell=True. Pass command arguments as a list instead.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-78, A03:2021-Injection</div>
+                    <div class='code-block'>     13:     cmd = input(&quot;Command: &quot;)
+&gt;&gt;   14:     subprocess.call(cmd, shell=True)</div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="HIGH MEDIUM Command Injection TAINT-CMD Taint flow: user input -&gt; subprocess.call C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py 14 Tainted data from user input flows into subprocess.call, which may allow command injection. Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True. Use allowlists and avoid shell=True; prefer subprocess with list args. CWE-78 A03:2021-Injection      13:     cmd = input(&quot;Command: &quot;)
+&gt;&gt;   14:     subprocess.call(cmd, shell=True)">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: MEDIUM</div></td>
+            <td>
+                <strong>Taint flow: user input -&gt; subprocess.call</strong>
+                <div class="muted" style="margin-top:4px;">TAINT-CMD · Command Injection</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/command_injection_vulnerable.py</td>
+            <td>14</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> Tainted data from user input flows into subprocess.call, which may allow command injection.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Validate and sanitize user input; use parameterized queries for SQL; avoid shell=True.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Use allowlists and avoid shell=True; prefer subprocess with list args.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-78, A03:2021-Injection</div>
+                    <div class='code-block'>     13:     cmd = input(&quot;Command: &quot;)
+&gt;&gt;   14:     subprocess.call(cmd, shell=True)</div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="HIGH HIGH Unsafe Deserialization PY005 Use of pickle.loads() C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py 9 pickle deserialization may execute arbitrary code when loading untrusted data. Do not deserialize untrusted pickle data. Use safer formats such as JSON where possible. Do not deserialize untrusted pickle data. Use JSON or other safe formats. CWE-502 A08:2021-Software and Data Integrity Failures       8: def load_config(data):
+&gt;&gt;    9:     return pickle.loads(data)
+     10: ">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: HIGH</div></td>
+            <td>
+                <strong>Use of pickle.loads()</strong>
+                <div class="muted" style="margin-top:4px;">PY005 · Unsafe Deserialization</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py</td>
+            <td>9</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> pickle deserialization may execute arbitrary code when loading untrusted data.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Do not deserialize untrusted pickle data. Use safer formats such as JSON where possible.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Do not deserialize untrusted pickle data. Use JSON or other safe formats.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-502, A08:2021-Software and Data Integrity Failures</div>
+                    <div class='code-block'>      8: def load_config(data):
+&gt;&gt;    9:     return pickle.loads(data)
+     10: </div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="HIGH HIGH Unsafe Deserialization PY006 Use of yaml.load() C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py 13 yaml.load() may be unsafe when parsing untrusted YAML content. Prefer yaml.safe_load() for untrusted input. Prefer yaml.safe_load() for untrusted input. CWE-502 A08:2021-Software and Data Integrity Failures      12: def parse_yaml(text):
+&gt;&gt;   13:     return yaml.load(text)">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: HIGH</div></td>
+            <td>
+                <strong>Use of yaml.load()</strong>
+                <div class="muted" style="margin-top:4px;">PY006 · Unsafe Deserialization</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/deserialization_vulnerable.py</td>
+            <td>13</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> yaml.load() may be unsafe when parsing untrusted YAML content.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Prefer yaml.safe_load() for untrusted input.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Prefer yaml.safe_load() for untrusted input.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-502, A08:2021-Software and Data Integrity Failures</div>
+                    <div class='code-block'>     12: def parse_yaml(text):
+&gt;&gt;   13:     return yaml.load(text)</div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="HIGH MEDIUM Secrets SEC002 Potential hardcoded API key / token / secret C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py 3 Possible hardcoded credential or token detected. Store credentials outside source code and inject them securely at runtime. Store credentials outside source code and inject them securely at runtime. CWE-798 A07:2021-Identification and Authentication Failures       2: 
+&gt;&gt;    3: API_KEY = &quot;sk-1234567890abcdef&quot;
+      4: PASSWORD = &quot;admin123&quot;">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: MEDIUM</div></td>
+            <td>
+                <strong>Potential hardcoded API key / token / secret</strong>
+                <div class="muted" style="margin-top:4px;">SEC002 · Secrets</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py</td>
+            <td>3</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> Possible hardcoded credential or token detected.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Store credentials outside source code and inject them securely at runtime.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Store credentials outside source code and inject them securely at runtime.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-798, A07:2021-Identification and Authentication Failures</div>
+                    <div class='code-block'>      2: 
+&gt;&gt;    3: API_KEY = &quot;sk-1234567890abcdef&quot;
+      4: PASSWORD = &quot;admin123&quot;</div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="HIGH MEDIUM Secrets SEC001 Potential hardcoded password C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py 4 Possible hardcoded password detected. Move secrets to environment variables or a secure secrets manager. Move secrets to environment variables or a secure secrets manager. CWE-798 A07:2021-Identification and Authentication Failures       3: API_KEY = &quot;sk-1234567890abcdef&quot;
+&gt;&gt;    4: PASSWORD = &quot;admin123&quot;
+      5: AWS_ACCESS_KEY = &quot;AKIAIOSFODNN7EXAMPLE&quot;">
+            <td><span class="badge badge-high">HIGH</span><div class="sub-badge">Confidence: MEDIUM</div></td>
+            <td>
+                <strong>Potential hardcoded password</strong>
+                <div class="muted" style="margin-top:4px;">SEC001 · Secrets</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/secret_exposure_vulnerable.py</td>
+            <td>4</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> Possible hardcoded password detected.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Move secrets to environment variables or a secure secrets manager.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Move secrets to environment variables or a secure secrets manager.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-798, A07:2021-Identification and Authentication Failures</div>
+                    <div class='code-block'>      3: API_KEY = &quot;sk-1234567890abcdef&quot;
+&gt;&gt;    4: PASSWORD = &quot;admin123&quot;
+      5: AWS_ACCESS_KEY = &quot;AKIAIOSFODNN7EXAMPLE&quot;</div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="LOW LOW Cryptography SEC009 Insecure random for security-sensitive context C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py 4 The `random` module is not suitable for security-sensitive randomness (tokens, secrets, keys). Use the `secrets` module for tokens/keys, or `os.urandom` for raw bytes. Use the secrets module for tokens/keys, or os.urandom for raw bytes. CWE-330        3: import hashlib
+&gt;&gt;    4: import random
+      5: ">
+            <td><span class="badge badge-low">LOW</span><div class="sub-badge">Confidence: LOW</div></td>
+            <td>
+                <strong>Insecure random for security-sensitive context</strong>
+                <div class="muted" style="margin-top:4px;">SEC009 · Cryptography</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py</td>
+            <td>4</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> The `random` module is not suitable for security-sensitive randomness (tokens, secrets, keys).</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Use the `secrets` module for tokens/keys, or `os.urandom` for raw bytes.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Use the secrets module for tokens/keys, or os.urandom for raw bytes.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-330</div>
+                    <div class='code-block'>      3: import hashlib
+&gt;&gt;    4: import random
+      5: </div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="MEDIUM MEDIUM Cryptography SEC005 Possible insecure MD5 usage C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py 8 MD5 is not suitable for security-sensitive cryptographic use. Use stronger algorithms such as SHA-256, or password hashing libraries where appropriate. Use SHA-256 or stronger; use password hashing libraries for passwords. CWE-328 A02:2021-Cryptographic Failures       7: def hash_password(pwd):
+&gt;&gt;    8:     return hashlib.md5(pwd.encode()).hexdigest()
+      9: ">
+            <td><span class="badge badge-medium">MEDIUM</span><div class="sub-badge">Confidence: MEDIUM</div></td>
+            <td>
+                <strong>Possible insecure MD5 usage</strong>
+                <div class="muted" style="margin-top:4px;">SEC005 · Cryptography</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py</td>
+            <td>8</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> MD5 is not suitable for security-sensitive cryptographic use.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Use stronger algorithms such as SHA-256, or password hashing libraries where appropriate.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Use SHA-256 or stronger; use password hashing libraries for passwords.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-328, A02:2021-Cryptographic Failures</div>
+                    <div class='code-block'>      7: def hash_password(pwd):
+&gt;&gt;    8:     return hashlib.md5(pwd.encode()).hexdigest()
+      9: </div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="MEDIUM MEDIUM Cryptography SEC006 Possible insecure SHA1 usage C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py 12 SHA-1 is deprecated for many security-sensitive use cases. Use SHA-256 or stronger modern cryptographic primitives. Use SHA-256 or stronger modern cryptographic primitives. CWE-328 A02:2021-Cryptographic Failures      11: def checksum(data):
+&gt;&gt;   12:     return hashlib.sha1(data).hexdigest()
+     13: ">
+            <td><span class="badge badge-medium">MEDIUM</span><div class="sub-badge">Confidence: MEDIUM</div></td>
+            <td>
+                <strong>Possible insecure SHA1 usage</strong>
+                <div class="muted" style="margin-top:4px;">SEC006 · Cryptography</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py</td>
+            <td>12</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> SHA-1 is deprecated for many security-sensitive use cases.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Use SHA-256 or stronger modern cryptographic primitives.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Use SHA-256 or stronger modern cryptographic primitives.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-328, A02:2021-Cryptographic Failures</div>
+                    <div class='code-block'>     11: def checksum(data):
+&gt;&gt;   12:     return hashlib.sha1(data).hexdigest()
+     13: </div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="LOW LOW Cryptography SEC009 Insecure random for security-sensitive context C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py 16 The `random` module is not suitable for security-sensitive randomness (tokens, secrets, keys). Use the `secrets` module for tokens/keys, or `os.urandom` for raw bytes. Use the secrets module for tokens/keys, or os.urandom for raw bytes. CWE-330       15: def gen_token():
+&gt;&gt;   16:     return str(random.randint(0, 10**9))">
+            <td><span class="badge badge-low">LOW</span><div class="sub-badge">Confidence: LOW</div></td>
+            <td>
+                <strong>Insecure random for security-sensitive context</strong>
+                <div class="muted" style="margin-top:4px;">SEC009 · Cryptography</div>
+            </td>
+            <td class="path">C:/Users/happy/Desktop/ai-repo-security-scanner-main/benchmark/weak_crypto_vulnerable.py</td>
+            <td>16</td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> The `random` module is not suitable for security-sensitive randomness (tokens, secrets, keys).</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Use the `secrets` module for tokens/keys, or `os.urandom` for raw bytes.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Use the secrets module for tokens/keys, or os.urandom for raw bytes.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-330</div>
+                    <div class='code-block'>     15: def gen_token():
+&gt;&gt;   16:     return str(random.randint(0, 10**9))</div>
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="CRITICAL HIGH Secret Exposure RH005 Secret or API key detected in file secret_exposure_vulnerable.py  File content matches secret pattern: AWS access key. Treat as exposed. Revoke and rotate the credential immediately. Remove from repo and consider purging from git history. Revoke/rotate the key; remove from git; consider purging from history. CWE-798  ">
+            <td><span class="badge badge-critical">CRITICAL</span><div class="sub-badge">Confidence: HIGH</div></td>
+            <td>
+                <strong>Secret or API key detected in file</strong>
+                <div class="muted" style="margin-top:4px;">RH005 · Secret Exposure</div>
+            </td>
+            <td class="path">secret_exposure_vulnerable.py</td>
+            <td></td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> File content matches secret pattern: AWS access key. Treat as exposed.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Revoke and rotate the credential immediately. Remove from repo and consider purging from git history.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Revoke/rotate the key; remove from git; consider purging from history.</div>
+                    <div style='margin-top:8px;' class='muted'><strong>References:</strong> CWE-798</div>
+                    
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+        <tr data-search="MEDIUM HIGH Repository Hygiene RH011 Verify sensitive files are not tracked .gitignore  .gitignore only prevents untracked files from being added; it does not untrack or remove files already in the index. Sensitive or cache files already committed remain in repository history until explicitly removed. Run &#x27;git ls-files&#x27; to list tracked files. For any .env, __pycache__, *.pyc, or venv paths: use &#x27;git rm --cached &lt;file&gt;&#x27; to stop tracking. Rotate any exposed secrets. Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv.   ">
+            <td><span class="badge badge-medium">MEDIUM</span><div class="sub-badge">Confidence: HIGH</div></td>
+            <td>
+                <strong>Verify sensitive files are not tracked</strong>
+                <div class="muted" style="margin-top:4px;">RH011 · Repository Hygiene</div>
+            </td>
+            <td class="path">.gitignore</td>
+            <td></td>
+            <td>
+            <details>
+                <summary>View details</summary>
+                <div style="margin-top:10px;">
+                    <div><strong>Description:</strong> .gitignore only prevents untracked files from being added; it does not untrack or remove files already in the index. Sensitive or cache files already committed remain in repository history until explicitly removed.</div>
+                    <div style='margin-top:8px;'><strong>Recommendation:</strong> Run &#x27;git ls-files&#x27; to list tracked files. For any .env, __pycache__, *.pyc, or venv paths: use &#x27;git rm --cached &lt;file&gt;&#x27; to stop tracking. Rotate any exposed secrets.</div>
+                    <div style='margin-top:8px;'><strong>Remediation:</strong> Run git ls-files and use git rm --cached for any .env, __pycache__, *.pyc, venv.</div>
+                    
+                    
+                </div>
+            </details>
+            </td>
+        </tr>
+        
+            </tbody>
+        </table>
+    </div>
+    
+        </div>
+
+        <div class="panel section">
+            <h2 class="section-title">Scan Errors</h2>
+            <div class="empty-state">No scan errors encountered.</div>
+        </div>
+
+        <div class="footer-note">
+            Generated by AI Repo Security Scanner
+        </div>
+    </div>
+
+    <script>
+        function filterFindings() {
+            const input = document.getElementById("findingSearch");
+            const filter = input.value.toLowerCase();
+            const rows = document.querySelectorAll("#findingsTable tbody tr");
+
+            rows.forEach(function(row) {
+                const text = row.innerText.toLowerCase();
+                if (text.indexOf(filter) > -1) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
+    </script>
+</body>
+</html>
