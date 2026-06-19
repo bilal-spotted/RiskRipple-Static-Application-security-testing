@@ -1,30 +1,49 @@
 # RiskRipple: Smart SAST for Python
 
-[cite_start]I built this lightweight Static Application Security Testing (SAST) tool to solve the widely documented problems with traditional security scanners: they generate an overwhelming volume of alerts, cause alert fatigue, and provide little context about what a developer should actually do to fix the code[cite: 866, 918]. 
+A lightweight, context-aware Static Application Security Testing (SAST) engine designed to detect vulnerabilities in Python codebases without overwhelming developers with false positives. 
 
-[cite_start]RiskRipple analyzes Python source code to detect 10 distinct classes of vulnerabilities (including SQLi, XSS, and Command Injection), but instead of just dumping a list of errors, it ranks them by true risk and provides plain-English remediation guidance directly in the workflow[cite: 867, 869, 871].
+I developed this tool to address a massive gap in the DevSecOps tooling landscape: traditional scanners generate too much noise and provide zero context. By utilizing Python's built-in `ast` module, RiskRipple performs deep structural analysis, intra-procedural taint tracking, and dynamic risk scoring to highlight real, exploitable threats while automatically generating plain-English remediation guidance.
 
-## 🚀 Core Novel Features
+## Innovations
 
-* [cite_start]**Exploitability Scoring Engine:** Instead of static High/Medium/Low labels, the engine calculates a dynamic risk score (0.0 to 10.0)[cite: 931]. [cite_start]It tracks data flows to see if vulnerable code is reachable from user-controlled input (taint bonus) and checks if it resides in a publicly exposed API endpoint (exposure bonus)[cite: 931].
-* [cite_start]**Intelligent Noise Filter:** Reduces output clutter by fingerprinting and de-duplicating repeated findings across the codebase[cite: 936]. [cite_start]It also suppresses low-impact alerts below a configurable threshold, helping developers focus only on critical threats[cite: 870, 936].
-* [cite_start]**Fix-Hint Generator:** Every single finding is accompanied by a plain-English remediation hint and a concrete replacement code example, allowing developers to patch the code without leaving their IDE to search documentation[cite: 933, 934].
+* **Dynamic Exploitability Scoring (0.0 - 10.0):** Instead of assigning static severity labels, the engine calculates a dynamic risk score. It applies a "taint bonus" if the vulnerable code is reachable from user-controlled input and an "exposure bonus" if it resides in a publicly accessible web route (e.g., Flask `@app.route`). It also applies a context penalty to downgrade findings located in test files or dead code.
+* **Intelligent Noise Filtering:** Combats alert fatigue through deterministic fingerprinting. It de-duplicates repeated findings (such as a copy-pasted database query) and suppresses low-impact alerts below a customizable minimum score threshold.
+* **Inline Fix-Hint Generator:** Every finding is paired with a specific, plain-English remediation hint and a secure code replacement example, allowing developers to patch vulnerabilities without breaking their workflow to read external documentation.
 
-## 🛠️ Technical Architecture
+## Vulnerability Coverage
 
-* [cite_start]**Language & Parsing:** Built entirely in Python, utilizing the built-in `ast` module to construct and traverse Abstract Syntax Trees (AST)[cite: 871, 1092].
-* [cite_start]**Analysis Engine:** Implements intra-procedural taint analysis to map sources to dangerous sinks, alongside regex-based pattern matching for hardcoded secrets and weak cryptography[cite: 871, 979, 1111].
-* [cite_start]**CI/CD Integration:** The tool runs locally via CLI and generates both a structured `findings.json` for pipeline quality gating and an interactive, color-coded `report.html` dashboard[cite: 872, 1154, 1155].
+The rule engine currently evaluates Abstract Syntax Trees (AST) and string patterns to detect 10 critical vulnerability classes:
+1. **SQL Injection (SQLi)** - Tracks tainted data into database execution sinks.
+2. **Cross-Site Scripting (XSS)** - Detects unsanitized input in template rendering functions.
+3. **Command Injection** - Flags unsafe `subprocess` calls configured with `shell=True`.
+4. **Hardcoded Secrets** - Regex-based detection for API keys, passwords, and tokens.
+5. **Insecure Deserialization** - Flags unsafe `pickle.loads()` or `yaml.load()` executions.
+6. **Weak Cryptography** - Detects deprecated algorithms like MD5, SHA1, and DES.
+7. **Path Traversal** - Identifies user-controlled input in file path construction.
+8. **Insecure Randomness** - Flags non-cryptographic random number generators.
+9. **Debug/Logging Leaks** - Detects active production debug flags (e.g., `app.run(debug=True)`).
+10. **Unsafe File Handling** - Highlights risky file write and open operations.
 
-## ⚙️ How to Run
+##  Technical Architecture
 
-1. Clone the repository and navigate to the project root.
-2. Run the CLI command against your target directory:
-   [cite_start]`smart_sast --path ./your_project --min-score 3` [cite: 1052, 1053]
-3. [cite_start]The engine will parse the `.py` files, apply the rules, and generate the security reports[cite: 1162, 1163, 1167].
+* **Repo Loader:** Recursively traverses the target directory, automatically filtering out virtual environments (`venv/`) and cache directories (`__pycache__/`).
+* **AST Analyzer:** Parses source code into abstract syntax trees, building context-sensitive **Taint Maps** (tracking user input flow) and **Exposure Maps** (identifying exposed web endpoints).
+* **Rule Engine:** Evaluates AST nodes against structural security rules and pattern matches.
+* **Report Generator:** Outputs findings in a structured `findings.json` (ideal for pipeline gating) and an interactive, color-coded `report.html` dashboard.
 
-## 🧠 Technical Hurdles & Lessons Learned
+## ⚙️ Quick Start & Integration
 
-Developing this scanner forced me to think deeply about how code is structurally executed. 
-* [cite_start]**AST Traversal:** Building the `AST Analyzer` taught me how to break down Python scripts into hierarchical grammar nodes, which was a massive step up from basic regex matching[cite: 1092, 1093].
-* [cite_start]**Context Matters:** I learned that a vulnerability in dead code is not the same as a vulnerability in a live Flask `@app.route`[cite: 920, 1099]. [cite_start]Implementing the context-sensitive exposure map was the most challenging but rewarding part of the project, as it proved that security tools must prioritize developer workflow to actually be useful[cite: 924, 1099].
+Designed for speed and simplicity, the scanner runs locally with zero external network dependencies and analyzes thousands of lines of code in seconds.
+
+**Run a local scan:**
+```bash
+smart_sast --path ./my_project_src --min-score 4.0
+```
+## CI/CD Pipeline Integration (GitHub Actions / GitLab CI):
+
+RiskRipple is built for DevSecOps automation. Use the --fail-on-critical flag to enforce strict security gates. If a vulnerability scores an 8.0 or higher, the engine exits with code 1, automatically blocking the pull request or merge.
+
+## Development Journey & Technical Hurdles
+Building a custom SAST tool from scratch was an intense dive into program analysis and compiler theory. Moving beyond simple regex string matching to actual AST traversal required mapping out exactly how Python handles variable assignments and function scopes.
+
+The biggest technical hurdle was implementing the intra-procedural taint analysis. Tracking how a variable changes state from the moment it enters a function as a request parameter until it hits a dangerous sink like cursor.execute() taught me how critical context is in security engineering. This project proved to me that effective security tooling doesn't just find bugs—it must genuinely understand the developer's environment to be useful.
