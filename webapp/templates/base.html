@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Risk Ripple{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script defer src="{{ url_for('static', filename='js/app.js') }}"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-header">
+      <div class="brand">
+        <div class="brand-mark">RR</div>
+        <div>
+          <div class="brand-title">Risk Ripple</div>
+          <div class="brand-subtitle">Rule based SAST and repo hygiene scanner</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <a class="nav-link {% if active_page == 'home' %}is-active{% endif %}" href="{{ url_for('home') }}">Home</a>
+        <a class="nav-link {% if active_page == 'scan' %}is-active{% endif %}" href="{{ url_for('scan') }}">New Scan</a>
+        <a class="nav-link {% if active_page == 'runs' %}is-active{% endif %}" href="{{ url_for('runs') }}">Runs</a>
+        <a class="nav-link {% if active_page == 'rules' %}is-active{% endif %}" href="{{ url_for('rules') }}">Rules</a>
+        <a class="nav-link {% if active_page == 'ai_review' %}is-active{% endif %}" href="{{ url_for('ai_review_page') }}">AI Review</a>
+        <a class="nav-link {% if active_page == 'tools' %}is-active{% endif %}" href="{{ url_for('secret_scan') }}">Secrets</a>
+        <a class="nav-link {% if active_page == 'cli' %}is-active{% endif %}" href="{{ url_for('cli_page') }}">CLI</a>
+      </nav>
+    </header>
+
+    <main class="main">
+      {% block hero %}{% endblock %}
+      {% block content %}{% endblock %}
+    </main>
+
+    <div class="footer">Made with &#9829; by Bilalpwns</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Reports</h1>
+  <p>Download every report format generated for this run.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+{% include "partials/run_nav.html" with context %}
+
+<section class="panel reveal" style="--delay: 0.05s;">
+  <h2>Available exports</h2>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Markdown</div>
+      <div class="stat-value">
+        {% if availability.md %}
+        <a class="btn btn-ghost" href="{{ url_for('download_report', run_id=run.id, fmt='md') }}">Download</a>
+        {% else %}-{% endif %}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">HTML</div>
+      <div class="stat-value">
+        {% if availability.html %}
+        <a class="btn btn-ghost" href="{{ url_for('download_report', run_id=run.id, fmt='html') }}" target="_blank">Open</a>
+        {% else %}-{% endif %}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">JSON</div>
+      <div class="stat-value">
+        {% if availability.json %}
+        <a class="btn btn-ghost" href="{{ url_for('download_report', run_id=run.id, fmt='json') }}">Download</a>
+        {% else %}-{% endif %}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">SARIF</div>
+      <div class="stat-value">
+        {% if availability.sarif %}
+        <a class="btn btn-ghost" href="{{ url_for('download_report', run_id=run.id, fmt='sarif') }}">Download</a>
+        {% else %}-{% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel reveal" style="--delay: 0.1s;">
+  <h2>Report paths</h2>
+  <div class="helper">Web GUI reports: {{ run.run_reports_dir }}</div>
+  <div class="helper" style="margin-top: 6px;">CLI output directory: {{ run.output_dir }}</div>
+</section>
+{% endblock %}

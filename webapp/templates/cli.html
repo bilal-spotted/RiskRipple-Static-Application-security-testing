@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>CLI access</h1>
+  <p>All CLI features remain intact. Use this command builder or run scanner.py directly.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  <h2>Command builder</h2>
+  <div class="code-block" id="cliCommand">{{ cli_command }}</div>
+  <div style="margin-top: 12px;">
+    <button class="btn btn-ghost" id="copyCommand">Copy command</button>
+  </div>
+</section>
+
+<section class="panel reveal" style="--delay: 0.1s;">
+  <h2>CLI highlights</h2>
+  <div class="helper">
+    python scanner.py &lt;target&gt; --workers 8 --top-files 5 --format all --output-dir output
+  </div>
+  <div class="helper" style="margin-top: 6px;">
+    Add --fail-on-severity or --fail-on-score to enforce CI thresholds.
+  </div>
+</section>
+{% endblock %}

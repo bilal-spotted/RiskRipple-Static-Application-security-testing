@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Run overview</h1>
+  <p>All summary metrics, risk explanations, and exports in one view.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+{% include "partials/run_nav.html" with context %}
+
+{% if report %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  <h2>Risk summary</h2>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Files scanned</div>
+      <div class="stat-value">{{ report.files_scanned }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total findings</div>
+      <div class="stat-value">{{ report.total_findings }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Risk score</div>
+      <div class="stat-value">{{ report.repository_risk_score }}</div>
+      {% set risk_label = report.risk_level or 'Unknown' %}
+      {% set risk_class = 'critical' if risk_label == 'Critical' else 'warning' if risk_label in ['High', 'Moderate'] else '' %}
+      <div class="pill {{ risk_class }}">{{ risk_label }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Severity counts</div>
+      <div class="stat-value">
+        C {{ report.severity_counts.CRITICAL or 0 }}
+        H {{ report.severity_counts.HIGH or 0 }}
+        M {{ report.severity_counts.MEDIUM or 0 }}
+        L {{ report.severity_counts.LOW or 0 }}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="panel reveal" style="--delay: 0.1s;">
+  <h2>Risk score breakdown</h2>
+  {% if report.score_breakdown %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Factor</th>
+          <th>Contribution</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>CRITICAL * 10</td><td>{{ report.score_breakdown.critical_contribution }}</td></tr>
+        <tr><td>HIGH * 6</td><td>{{ report.score_breakdown.high_contribution }}</td></tr>
+        <tr><td>MEDIUM * 3</td><td>{{ report.score_breakdown.medium_contribution }}</td></tr>
+        <tr><td>LOW * 1</td><td>{{ report.score_breakdown.low_contribution }}</td></tr>
+        <tr><td>Total severity score</td><td>{{ report.score_breakdown.severity_contribution }}</td></tr>
+        <tr><td>Taint flow bonus</td><td>{{ report.score_breakdown.taint_flow_contribution }}</td></tr>
+        <tr><td>Secret exposure bonus</td><td>{{ report.score_breakdown.secret_exposure_contribution }}</td></tr>
+        <tr><td>Repository hygiene contribution</td><td>{{ report.score_breakdown.repository_hygiene_contribution }}</td></tr>
+        <tr><td>File concentration factor</td><td>{{ report.score_breakdown.file_concentration_factor }}</td></tr>
+        <tr><td>Unique files factor</td><td>{{ report.score_breakdown.unique_files_factor }}</td></tr>
+        <tr><td>Critical category bonus</td><td>{{ report.score_breakdown.critical_category_contribution }}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No breakdown data available for this run.</div>
+  {% endif %}
+</section>
+
+<section class="panel reveal" style="--delay: 0.15s;">
+  <h2>Top risky files</h2>
+  {% if report.top_risky_files %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Risk score</th>
+          <th>Findings</th>
+          <th>Severity counts</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in report.top_risky_files %}
+        <tr>
+          <td>{{ item.file_path }}</td>
+          <td>{{ item.risk_score }}</td>
+          <td>{{ item.findings_count }}</td>
+          <td>
+            C {{ item.severity_counts.CRITICAL or 0 }}
+            H {{ item.severity_counts.HIGH or 0 }}
+            M {{ item.severity_counts.MEDIUM or 0 }}
+            L {{ item.severity_counts.LOW or 0 }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No risky files detected.</div>
+  {% endif %}
+</section>
+
+<section class="panel reveal" style="--delay: 0.2s;">
+  <h2>Top categories</h2>
+  {% if report.top_risky_categories %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Findings</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in report.top_risky_categories %}
+        <tr>
+          <td>{{ item.category }}</td>
+          <td>{{ item.count }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No category breakdown available.</div>
+  {% endif %}
+</section>
+
+<section class="panel reveal" style="--delay: 0.25s;">
+  <h2>Threshold checks</h2>
+  {% if run.thresholds %}
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Severity threshold</div>
+      <div class="stat-value">{{ run.thresholds.severity_threshold or 'None' }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Severity breached</div>
+      <div class="stat-value">{{ 'Yes' if run.thresholds.severity_breached else 'No' }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Score threshold</div>
+      <div class="stat-value">{{ run.thresholds.score_threshold if run.thresholds.score_threshold is not none else 'None' }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Score breached</div>
+      <div class="stat-value">{{ 'Yes' if run.thresholds.score_breached else 'No' }}</div>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">No thresholds configured for this run.</div>
+  {% endif %}
+</section>
+
+<section class="panel reveal" style="--delay: 0.3s;">
+  <h2>Scan events</h2>
+  {% if run.events %}
+  <div class="timeline">
+    {% for event in run.events %}
+    <div class="timeline-item">
+      <div>{{ event.message }}</div>
+      <div class="timeline-time">{{ event.ts | fmt_ts }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">No events recorded yet.</div>
+  {% endif %}
+</section>
+
+<section class="panel reveal" style="--delay: 0.35s;">
+  <h2>CLI command for this run</h2>
+  <div class="code-block" id="cliCommand">{{ cli_command }}</div>
+  <div style="margin-top: 12px;">
+    <button class="btn btn-ghost" id="copyCommand">Copy command</button>
+  </div>
+</section>
+
+<section class="panel reveal" style="--delay: 0.4s;">
+  <h2>Scan errors</h2>
+  {% if report.scan_errors %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>File</th>
+          <th>Error</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for err in report.scan_errors %}
+        <tr>
+          <td>{{ err.file }}</td>
+          <td>{{ err.error }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No scan errors recorded.</div>
+  {% endif %}
+</section>
+{% else %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  <div class="empty-state">Report data is not available yet. If the run is still active, check back soon.</div>
+</section>
+{% endif %}
+{% endblock %}

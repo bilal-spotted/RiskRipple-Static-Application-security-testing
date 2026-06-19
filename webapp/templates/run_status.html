@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Scan in progress</h1>
+  <p>Stay on this page while the scan runs. You will be redirected when it finishes.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="panel reveal" style="--delay: 0.05s;" id="runStatus"
+  data-status-url="{{ url_for('run_status_json', run_id=run.id) }}"
+  data-redirect-url="{{ url_for('run_overview', run_id=run.id) }}">
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Run ID</div>
+      <div class="stat-value mono-wrap text-wrap" title="{{ run.id }}">{{ run.id }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Status</div>
+      <div class="stat-value" id="statusLabel">{{ run.status }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Target</div>
+      <div class="stat-value is-path" title="{{ run.target_resolved or run.target }}">
+        {{ run.target_resolved or run.target }}
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 18px;">
+    <div class="progress">
+      <div class="progress-bar" id="progressValue" data-progress="{{ run.progress or 0 }}" style="width: 0%;"></div>
+    </div>
+    <div class="helper" style="margin-top: 10px;">Latest event: <span id="lastEvent">{{ run.events[-1].message if run.events else '' }}</span></div>
+  </div>
+</section>
+{% endblock %}

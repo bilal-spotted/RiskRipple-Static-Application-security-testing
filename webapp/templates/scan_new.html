@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Configure a scan</h1>
+  <p>
+    Use the same options as the CLI, plus automatic report storage for the web GUI.
+    All output formats are supported.
+  </p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  <form method="post">
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="target">Target directory</label>
+        <input class="input" id="target" name="target" type="text" value="{{ defaults.target }}" required>
+        <div class="helper">Local path only (clone GitHub repos first), absolute or relative.</div>
+      </div>
+      <div class="form-field">
+        <label for="workers">Workers</label>
+        <input class="input" id="workers" name="workers" type="number" min="1" value="{{ defaults.workers }}">
+      </div>
+      <div class="form-field">
+        <label for="top_files">Top risky files</label>
+        <input class="input" id="top_files" name="top_files" type="number" min="0" value="{{ defaults.top_files }}">
+      </div>
+      <div class="form-field">
+        <label for="output_dir">Output directory</label>
+        <input class="input" id="output_dir" name="output_dir" type="text" value="{{ defaults.output_dir }}">
+        <div class="helper">Reports are also stored in the web GUI run folder automatically.</div>
+      </div>
+    </div>
+
+    <div class="form-field" style="margin-top: 18px;">
+      <label>Report formats</label>
+      <div class="checkbox-group">
+        <label class="checkbox-card">
+          <input type="checkbox" name="formats" value="all" data-format="all" {% if 'all' in defaults.formats %}checked{% endif %}>
+          All formats
+        </label>
+        <label class="checkbox-card">
+          <input type="checkbox" name="formats" value="md" data-format="single">
+          Markdown
+        </label>
+        <label class="checkbox-card">
+          <input type="checkbox" name="formats" value="html" data-format="single">
+          HTML
+        </label>
+        <label class="checkbox-card">
+          <input type="checkbox" name="formats" value="json" data-format="single">
+          JSON
+        </label>
+        <label class="checkbox-card">
+          <input type="checkbox" name="formats" value="sarif" data-format="single">
+          SARIF
+        </label>
+      </div>
+      <div class="helper">Select All formats or individual formats. If All is selected, other choices are ignored.</div>
+    </div>
+
+    <div class="form-grid" style="margin-top: 18px;">
+      <div class="form-field">
+        <label for="fail_on_severity">Fail on severity</label>
+        <select class="select" id="fail_on_severity" name="fail_on_severity">
+          <option value="">No threshold</option>
+          <option value="CRITICAL">CRITICAL</option>
+          <option value="HIGH">HIGH</option>
+          <option value="MEDIUM">MEDIUM</option>
+          <option value="LOW">LOW</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label for="fail_on_score">Fail on risk score</label>
+        <input class="input" id="fail_on_score" name="fail_on_score" type="number" min="0" placeholder="e.g. 50">
+      </div>
+      <div class="form-field">
+        <label>Logging</label>
+        <div class="checkbox-group">
+          <label class="checkbox-card">
+            <input type="checkbox" name="verbose"> Verbose
+          </label>
+          <label class="checkbox-card">
+            <input type="checkbox" name="quiet"> Quiet
+          </label>
+        </div>
+        <div class="helper">Verbose captures extra details. Quiet limits output to errors.</div>
+      </div>
+    </div>
+
+    <div class="hero-actions" style="margin-top: 22px;">
+      <button class="btn btn-primary" type="submit">Run scan</button>
+      <a class="btn btn-outline" href="{{ url_for('runs') }}">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Scan history</h1>
+  <p>Every run is stored with full findings, risk scores, and report exports.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  {% if runs %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Status</th>
+          <th>Created</th>
+          <th>Target</th>
+          <th>Findings</th>
+          <th>Risk</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in runs %}
+        <tr>
+          <td class="mono-wrap text-wrap">{{ run.id }}</td>
+          <td>
+            <span class="status-chip {{ run.status | status_class }}">{{ run.status }}</span>
+          </td>
+          <td>{{ run.created_at | fmt_ts }}</td>
+          <td>{{ run.target_resolved or run.target }}</td>
+          <td>{{ run.summary.total_findings if run.summary else '-' }}</td>
+          <td>{{ run.summary.risk_level if run.summary else '-' }}</td>
+          <td>
+            <a class="btn btn-ghost" href="{{ url_for('run_overview', run_id=run.id) }}">Overview</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No runs yet. Start a scan to populate history.</div>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Run not found</h1>
+  <p>The requested scan run does not exist or was removed.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  <a class="btn btn-outline" href="{{ url_for('runs') }}">Back to runs</a>
+</section>
+{% endblock %}

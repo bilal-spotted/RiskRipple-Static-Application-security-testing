@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Risk Ripple: security telemetry you can read, trust, and ship.</h1>
+  <p>
+    Run the full scanner pipeline from a visual dashboard: AST rules, regex rules, taint analysis,
+    repository hygiene, score breakdowns, and report exports.
+  </p>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="{{ url_for('scan') }}">Start a new scan</a>
+    <a class="btn btn-outline" href="{{ url_for('runs') }}">View scan history</a>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  <h2>Everything in one cockpit</h2>
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Detection engines</div>
+      <div class="stat-value">AST, regex, taint</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Repository hygiene</div>
+      <div class="stat-value">Secrets + gitignore gaps</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Reports</div>
+      <div class="stat-value">Markdown, HTML, JSON, SARIF</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Risk scoring</div>
+      <div class="stat-value">Weighted, explainable</div>
+    </div>
+  </div>
+</section>
+
+<section class="panel reveal" style="--delay: 0.1s;">
+  <h2>Recent runs</h2>
+  {% if runs %}
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Run</th>
+          <th>Status</th>
+          <th>Target</th>
+          <th>Findings</th>
+          <th>Risk</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in runs %}
+        <tr>
+          <td>{{ run.id }}</td>
+          <td>
+            <span class="status-chip {{ run.status | status_class }}">{{ run.status }}</span>
+          </td>
+          <td>{{ run.target_resolved or run.target }}</td>
+          <td>{{ run.summary.total_findings if run.summary else '-' }}</td>
+          <td>{{ run.summary.risk_level if run.summary else '-' }}</td>
+          <td><a class="btn btn-ghost" href="{{ url_for('run_overview', run_id=run.id) }}">Open</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No scans yet. Start with a new scan to populate results.</div>
+  {% endif %}
+</section>
+{% endblock %}

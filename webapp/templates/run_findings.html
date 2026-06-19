@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Findings</h1>
+  <p>Search, filter, and inspect every finding with full metadata.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+{% include "partials/run_nav.html" with context %}
+
+<section class="panel reveal" style="--delay: 0.05s;">
+  <div class="form-grid">
+    <div class="form-field">
+      <label for="findingSearch">Search</label>
+      <input class="input" id="findingSearch" type="text" placeholder="Search by rule, file, category, or code...">
+    </div>
+    <div class="form-field">
+      <label for="severityFilter">Severity</label>
+      <select class="select" id="severityFilter">
+        <option value="">All severities</option>
+        <option value="CRITICAL">CRITICAL</option>
+        <option value="HIGH">HIGH</option>
+        <option value="MEDIUM">MEDIUM</option>
+        <option value="LOW">LOW</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label for="categoryFilter">Category</label>
+      <select class="select" id="categoryFilter">
+        <option value="">All categories</option>
+        {% for category in categories %}
+        <option value="{{ category }}">{{ category }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  {% if findings %}
+  <div class="table-wrap" style="margin-top: 18px;" data-filter-table="findings">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Severity</th>
+          <th>Finding</th>
+          <th>File</th>
+          <th>Line</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for finding in findings %}
+        {% set search_blob = finding.display_severity ~ ' ' ~ finding.display_confidence ~ ' ' ~ finding.display_category ~ ' ' ~ finding.rule_id ~ ' ' ~ finding.display_title ~ ' ' ~ finding.display_file ~ ' ' ~ finding.display_line ~ ' ' ~ finding.description ~ ' ' ~ finding.display_recommendation ~ ' ' ~ finding.remediation ~ ' ' ~ finding.references_text ~ ' ' ~ finding.display_snippet %}
+        <tr data-search="{{ search_blob }}" data-severity="{{ finding.display_severity }}" data-category="{{ finding.display_category }}">
+          <td>
+            <span class="badge {{ finding.display_severity | severity_class }}">{{ finding.display_severity }}</span>
+            <div class="helper">Confidence {{ finding.display_confidence }}</div>
+          </td>
+          <td>
+            <strong>{{ finding.display_title }}</strong>
+            <div class="helper"><span class="rule-id">{{ finding.rule_id }}</span> | {{ finding.display_category }}</div>
+          </td>
+          <td>{{ finding.display_file }}</td>
+          <td>{{ finding.display_line }}</td>
+          <td>
+            <details>
+              <summary>View details</summary>
+              <div style="margin-top: 10px;">
+                {% if finding.description %}<div><strong>Description:</strong> {{ finding.description }}</div>{% endif %}
+                {% if finding.display_recommendation %}<div style="margin-top: 8px;"><strong>Recommendation:</strong> {{ finding.display_recommendation }}</div>{% endif %}
+                {% if finding.remediation %}<div style="margin-top: 8px;"><strong>Remediation:</strong> {{ finding.remediation }}</div>{% endif %}
+                {% if finding.references_text %}<div style="margin-top: 8px;" class="helper"><strong>References:</strong> {{ finding.references_text }}</div>{% endif %}
+                {% if finding.display_snippet %}<div class="code-block" style="margin-top: 10px;">{{ finding.display_snippet }}</div>{% endif %}
+              </div>
+            </details>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="margin-top: 18px;">No findings in this run.</div>
+  {% endif %}
+</section>
+{% endblock %}
