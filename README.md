@@ -1,4 +1,4 @@
-# RiskRipple: Ai AI-assisted SAST for repositories
+# RiskRipple: AI-assisted SAST for repositories
 
 A lightweight, context-aware Static Application Security Testing (SAST) engine designed to detect vulnerabilities in codebases without overwhelming developers with false positives. 
 
