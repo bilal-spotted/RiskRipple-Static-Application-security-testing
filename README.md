@@ -1,6 +1,6 @@
-# RiskRipple: Smart SAST for Python
+# RiskRipple: Smart SAST for repositories
 
-A lightweight, context-aware Static Application Security Testing (SAST) engine designed to detect vulnerabilities in Python codebases without overwhelming developers with false positives. 
+A lightweight, context-aware Static Application Security Testing (SAST) engine designed to detect vulnerabilities in codebases without overwhelming developers with false positives. 
 
 I developed this tool to address a massive gap in the DevSecOps tooling landscape: traditional scanners generate too much noise and provide zero context. By utilizing Python's built-in `ast` module, RiskRipple performs deep structural analysis, intra-procedural taint tracking, and dynamic risk scoring to highlight real, exploitable threats while automatically generating plain-English remediation guidance.
 
