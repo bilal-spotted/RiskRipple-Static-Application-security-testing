@@ -1,0 +1,284 @@
+# Risk Ripple
+
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://github.com/your-org/ai-repo-security-scanner/actions/workflows/tests.yml/badge.svg)](https://github.com/your-org/ai-repo-security-scanner/actions/workflows/tests.yml)
+[![Lint](https://github.com/your-org/ai-repo-security-scanner/actions/workflows/lint.yml/badge.svg)](https://github.com/your-org/ai-repo-security-scanner/actions/workflows/lint.yml)
+
+*Replace `your-org` in badge URLs with your GitHub org/repo for CI status.*
+
+**Rule-based SAST and repository hygiene for local Python projects.** Combines AST analysis, regex rules, intra-procedural taint tracking, and repo hygiene checks to produce **explainable** risk scores and reports (Markdown, HTML, JSON, SARIF). No black-box ML—every finding and score is traceable. Built for clarity, demos, and security-tool discussions.
+
+---
+
+## Table of Contents
+
+- [Quickstart](#quickstart)
+- [Web GUI](#web-gui)
+- [Why this project](#why-this-project)
+- [Key features](#key-features)
+- [Detection capabilities](#detection-capabilities)
+- [Risk scoring](#risk-scoring)
+- [Report formats](#report-formats)
+- [60-second demo](#60-second-demo)
+- [Installation & usage](#installation--usage)
+- [Architecture](#architecture)
+- [Benchmark & samples](#benchmark--samples)
+- [Example output](#example-output)
+- [JSON output schema](#json-output-schema)
+- [Limitations](#limitations)
+- [Development & testing](#development--testing)
+- [Future work](#future-work)
+- [License](#license)
+
+---
+
+## Quickstart
+
+```bash
+git clone https://github.com/your-org/ai-repo-security-scanner.git
+cd ai-repo-security-scanner
+python -m venv venv
+# Windows: venv\Scripts\activate
+# Linux/macOS: source venv/bin/activate
+pip install -r requirements.txt
+
+python scanner.py samples --output-dir output --format all
+```
+
+Reports are written to `output/`. Open **`output/security_report.html`** for the dashboard. Console output shows file count, finding counts by severity, risk score, and top risky files.
+
+**CI-style run** (exit 1 if HIGH+ findings or score ≥ 50):
+
+```bash
+python scanner.py . --fail-on-severity HIGH --fail-on-score 50 -q
+```
+
+## Web GUI
+
+Run the full dashboard locally (scan configuration, results, reports, tools):
+
+```bash
+pip install -r requirements.txt
+python -m webapp.app
+```
+
+Open http://127.0.0.1:8000 in a browser. The GUI stores run data under `webapp/data/`.
+
+Optional environment variables:
+
+```bash
+set WEBAPP_HOST=127.0.0.1
+set WEBAPP_PORT=8000
+set WEBAPP_DEBUG=1
+```
+
+The CLI remains available and unchanged: `python scanner.py <path>`.
+
+---
+
+## Why this project
+
+- **Explainable**: Every finding links to a rule; every score component is documented. No ML—auditable and interview-friendly.
+- **Deterministic**: Same repo → same results. Reproducible for triage and baselines.
+- **Low-noise**: Fewer, higher-confidence rules over pattern spraying. Quality over quantity.
+- **Python-first**: AST and taint target Python; regex and hygiene apply to supported file types.
+- **Portfolio-grade**: Clear layout, tests, CI, and docs so the project is easy to run, extend, and discuss.
+
+**Engineering trade-offs** (useful for interviews):
+
+- **Taint is intra-procedural** by design: we track flows inside a single function. Cross-function/cross-file taint would improve coverage but add major complexity; we document the limit and keep the implementation understandable.
+- **Scoring is additive and explicit**: severity + taint/secret/hygiene/concentration bonuses. We prefer a transparent formula over a single opaque number.
+- **Rules are curated**: we avoid adding weak regexes that would inflate counts. Each rule has metadata (CWE/OWASP, remediation) and is intended to be defensible.
+
+---
+
+## Key features
+
+- **AST checks**: Dangerous Python calls (`eval`, `exec`, `compile`, `os.system`, `subprocess` with `shell=True`, `pickle.loads`, unsafe `yaml.load`).
+- **Regex rules**: Hardcoded secrets, weak crypto (MD5/SHA1, insecure random), TLS/SSL misconfig, debug mode.
+- **Intra-procedural taint**: Source → sink within one function (command injection, SQL injection, path traversal).
+- **Repository hygiene**: Tracked sensitive files (`.env`, keys, `.pyc`), `.gitignore` gaps, secret patterns in content.
+- **Deterministic risk score**: Severity + taint/secret/hygiene/concentration bonuses; full breakdown in reports.
+- **Outputs**: Markdown, HTML dashboard, JSON, SARIF 2.1.0 (with fingerprints). Normalization and fingerprint-based dedup before reporting.
+
+---
+
+## Detection capabilities
+
+| Method | What it does |
+|--------|--------------|
+| **AST** | Dangerous Python constructs: `eval()`, `exec()`, `compile()`, `os.system()`, `subprocess` with `shell=True`, `pickle.loads()`, unsafe `yaml.load()`. |
+| **Regex** | Secrets, API keys, weak crypto (MD5/SHA1, insecure random), `verify=False`, debug mode. |
+| **Taint** | **Intra-procedural only**: user input (e.g. `input()`, `request.args`) → sinks (shell, SQL, file path) within the same function. No cross-function or cross-file flow. |
+| **Hygiene** | Tracked `.env`/keys/`.pyc`, missing `.gitignore` patterns, secret patterns in file content. Remediation explains that `.gitignore` does not untrack already-committed files. |
+
+---
+
+## Risk scoring
+
+Score = **severity contribution** (CRITICAL×10, HIGH×6, MEDIUM×3, LOW×1) + **taint bonus** + **secret-exposure bonus** + **hygiene contribution** + **file concentration** (when 2+ files) + **unique-files factor** + **critical-category bonus**. All components are in the report breakdown.
+
+**Bands:** 0–20 Low · 21–50 Moderate · 51–100 High · >100 Critical.
+
+Use `--fail-on-severity` and `--fail-on-score` in CI to enforce thresholds.
+
+---
+
+## Report formats
+
+| Format | Use |
+|--------|-----|
+| **Markdown** | Human-readable audit: summary, severity breakdown, top files, findings. |
+| **HTML** | Standalone dashboard: risk cards, severity/category distribution, top files/categories, score breakdown, searchable findings table. |
+| **JSON** | Structured export for tooling; stable schema (see [JSON output schema](#json-output-schema)). |
+| **SARIF 2.1.0** | For CI/code-scanning; includes fingerprints and run-level risk summary. |
+
+**What the HTML report shows:** Risk summary cards (files scanned, total findings, risk score with level badge), score breakdown table, severity bar chart, top risky categories and files, repository hygiene section, taint findings section, and a searchable full findings table with severity, rule, file, line, and expandable details (description, recommendation, CWE/OWASP, code snippet). Generate it with the [Quickstart](#quickstart) and open `output/security_report.html`; see `docs/README.md` for a short reference.
+
+---
+
+## 60-second demo
+
+1. **Scan the samples:** `python scanner.py samples --output-dir output --format all`
+2. **Read the console:** Note files scanned, finding counts by severity, risk score, top risky files.
+3. **Open the dashboard:** Open `output/security_report.html` in a browser.
+4. **Use in CI:** `python scanner.py . --fail-on-severity HIGH --fail-on-score 50 -q` (exits 1 if thresholds are met).
+
+---
+
+## Installation & usage
+
+**Requirements:** Python 3.8+
+
+1. Clone, create a venv, and install: `pip install -r requirements.txt`
+2. Run: `python scanner.py <path_to_repo_or_folder>`
+3. Reports go to `output/` by default. Use `--output-dir` and `--format` to change.
+
+**Options:**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `target` | Path to scan | (required) |
+| `--workers` | Concurrent scan workers | 8 |
+| `--top-files` | Top risky files in summary | 5 |
+| `--format` | `md`, `html`, `json`, `sarif`, or `all` | `all` |
+| `--output-dir` | Report output directory | `output` |
+| `--fail-on-severity` | Exit 1 if any finding has this severity or higher | — |
+| `--fail-on-score` | Exit 1 if risk score ≥ N | — |
+| `-v`, `--verbose` | Debug logging | — |
+| `-q`, `--quiet` | Only errors; no summary | — |
+
+**Exit codes:** 0 = success. 1 = invalid target, collection error, or threshold met.
+
+**Pre-commit secret scanner:** `python tools/check_secrets.py` (optionally `--include-test-fixtures` for tests/benchmark/samples).
+
+---
+
+## Architecture
+
+| Directory | Role |
+|-----------|------|
+| **`core/`** | Analyzer (AST + regex), taint analysis, repo hygiene, risk scoring, rule registry, finding normalization. |
+| **`rules/`** | Regex rule definitions; **`rules/metadata/`** YAML for rule metadata (CWE, OWASP, remediation, detection_type). |
+| **`reports/`** | Markdown, HTML, JSON, SARIF generators. |
+| **`io_utils/`** | File discovery and path handling. |
+| **`tools/`** | e.g. `check_secrets.py` for pre-commit. |
+
+**Pipeline:** Discover files → run AST + regex + taint per file → run hygiene on repo → enrich findings from rule metadata → normalize and deduplicate by fingerprint → compute risk and breakdown → write reports.
+
+---
+
+## Benchmark & samples
+
+**`benchmark/`** — Pairs of vulnerable vs safe examples (command injection, SQL injection, path traversal, deserialization, weak crypto, secret exposure). Run: `python scanner.py benchmark --output-dir output --format all`, then open `output/security_report.html`.
+
+**`samples/`** — Single file with multiple issue types for a quick demo (`python scanner.py samples`).
+
+See `benchmark/README.md` for the file list.
+
+---
+
+## Example output
+
+**Console summary:**
+
+```
+Scan Summary
+----------------------------
+Files scanned: 1
+Total findings: 9
+
+Severity counts:
+  CRITICAL: 0
+  HIGH: 8
+  MEDIUM: 1
+  LOW: 0
+
+Repository risk score: 91 — Risk level: High
+
+Top risky files:
+1. samples\vulnerable_sample.py (score 68, 7 findings)
+...
+```
+
+**JSON** (excerpt): `scan_summary` includes `repository_risk_score`, `risk_level`, and `score_breakdown` (all contribution components). Full structure below.
+
+---
+
+## JSON output schema
+
+| Field | Description |
+|-------|-------------|
+| `tool`, `version`, `generated_at` | Tool identity and timestamp. |
+| `target` | Scanned path. |
+| `scan_summary` | `files_scanned`, `total_findings`, `severity_counts`, `repository_risk_score`, `risk_level`, `score_breakdown`. |
+| `top_risky_files` | `{ file_path, risk_score, findings_count, severity_counts }`. |
+| `top_risky_categories` | `{ category, count }`. |
+| `findings` | Finding objects (rule_id, title, severity, confidence, category, file_path, line_number, description, recommendation, remediation, cwe, owasp, fingerprint). |
+| `scan_errors` | `{ file, error }` for scan failures. |
+
+---
+
+## Limitations
+
+- **Taint**: Intra-procedural only. No inter-procedural or cross-file data flow.
+- **Rule-based**: AST + regex + taint. False positives (e.g. test code) and false negatives (e.g. obfuscation, indirect flows) are possible.
+- **Coverage**: Fixed set of sources, sinks, and patterns. Not a replacement for a full audit or commercial SAST.
+- **Advisory**: Validate findings in context before treating as confirmed vulnerabilities.
+
+---
+
+## Development & testing
+
+```bash
+pip install -r requirements.txt pytest
+pytest tests/ -v
+```
+
+**Lint:**
+
+```bash
+pip install ruff
+ruff check .
+ruff format --check .
+```
+
+CI runs tests and lint on push/PR (`.github/workflows/tests.yml`, `.github/workflows/lint.yml`). Optional: `pre-commit install` (see `.pre-commit-config.yaml`).
+
+**Note:** If `pytest.ini` exists, pytest uses it instead of `pyproject.toml`. Remove `pytest.ini` to use the pytest config in `pyproject.toml` only.
+
+---
+
+## Future work
+
+- More taint sources/sinks and AST rules (e.g. subprocess/YAML) with low-noise criteria.
+- Inter-procedural or cross-file taint (larger effort).
+- Baseline/regression tests for rule changes.
+- SARIF path normalization and optional GitHub Code Scanning upload.
+
+---
+
+## License
+
+MIT. See [LICENSE](LICENSE).

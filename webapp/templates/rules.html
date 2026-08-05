@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Rule catalog</h1>
+  <p>All detection rules and metadata loaded from rules.yaml.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  <div class="form-field">
+    <label for="findingSearch">Search rules</label>
+    <input class="input" id="findingSearch" type="text" placeholder="Search by rule id, title, category, or detection type">
+  </div>
+
+  {% if rules %}
+  <div class="table-wrap" style="margin-top: 18px;" data-filter-table="findings">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Rule</th>
+          <th>Title</th>
+          <th>Severity</th>
+          <th>Category</th>
+          <th>Detection</th>
+          <th>References</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rule in rules %}
+        {% set refs = [] %}
+        {% if rule.cwe %}{% set _ = refs.append(rule.cwe) %}{% endif %}
+        {% if rule.owasp %}{% set _ = refs.append(rule.owasp) %}{% endif %}
+        {% if rule.references %}{% for r in rule.references %}{% set _ = refs.append(r) %}{% endfor %}{% endif %}
+        {% set refs_text = ', '.join(refs) %}
+        {% set search_blob = rule.rule_id ~ ' ' ~ rule.title ~ ' ' ~ rule.category ~ ' ' ~ rule.severity ~ ' ' ~ rule.detection_type ~ ' ' ~ refs_text %}
+        <tr data-search="{{ search_blob }}" data-severity="{{ rule.severity }}" data-category="{{ rule.category }}">
+          <td class="rule-id">{{ rule.rule_id }}</td>
+          <td>{{ rule.title }}</td>
+          <td><span class="badge {{ rule.severity | severity_class }}">{{ rule.severity }}</span></td>
+          <td>{{ rule.category }}</td>
+          <td>{{ rule.detection_type }}</td>
+          <td>{{ refs_text }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">Rule metadata is not available. Install PyYAML or verify rules.yaml.</div>
+  {% endif %}
+</section>
+{% endblock %}

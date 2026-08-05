@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Taint flow findings</h1>
+  <p>Sources to sinks inside each function, including sanitization flags.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+{% include "partials/run_nav.html" with context %}
+
+<section class="panel reveal" style="--delay: 0.05s;">
+  {% if findings %}
+  <div class="table-wrap" data-filter-table="findings">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Severity</th>
+          <th>Flow</th>
+          <th>File</th>
+          <th>Line</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for finding in findings %}
+        {% set flow = (finding.source or '') ~ ' -> ' ~ (finding.sink or '') %}
+        {% set search_blob = finding.display_severity ~ ' ' ~ finding.display_title ~ ' ' ~ flow ~ ' ' ~ finding.display_file ~ ' ' ~ finding.description %}
+        <tr data-search="{{ search_blob }}" data-severity="{{ finding.display_severity }}" data-category="{{ finding.display_category }}">
+          <td><span class="badge {{ finding.display_severity | severity_class }}">{{ finding.display_severity }}</span></td>
+          <td>
+            <strong>{{ finding.display_title }}</strong>
+            {% if finding.source and finding.sink %}
+            <div class="helper">{{ finding.source }} -> {{ finding.sink }}</div>
+            {% endif %}
+          </td>
+          <td>{{ finding.display_file }}</td>
+          <td>{{ finding.display_line }}</td>
+          <td>
+            <details>
+              <summary>View details</summary>
+              <div style="margin-top: 10px;">
+                {% if finding.description %}<div><strong>Description:</strong> {{ finding.description }}</div>{% endif %}
+                {% if finding.display_recommendation %}<div style="margin-top: 8px;"><strong>Recommendation:</strong> {{ finding.display_recommendation }}</div>{% endif %}
+                {% if finding.display_snippet %}<div class="code-block" style="margin-top: 10px;">{{ finding.display_snippet }}</div>{% endif %}
+              </div>
+            </details>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">No taint flow findings in this run.</div>
+  {% endif %}
+</section>
+{% endblock %}

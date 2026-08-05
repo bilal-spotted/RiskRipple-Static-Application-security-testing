@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.py[cod]
+*.pyd
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+pytest-cache-files*
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments (do not commit)
+venv/
+.venv/
+
+# Root-level re-export stubs removed; use core.*, io_utils.*, reports.* and tools/check_secrets.py
+/analyzer.py
+/file_loader.py
+/html_report.py
+/json_report.py
+/patch_suggester.py
+/repo_loader.py
+/report.py
+/risk.py
+/check_secrets.py
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.cursor/
+
+# Local working documents (not part of the published project)
+*.pdf
+*.docx
+
+# Local secrets (do not commit; use .env.example as template)
+.env
+.env.*
+!.env.example
+
+# Generated reports
+output/
+output/security_report.*
+security_report.*
+
+# Web GUI storage
+webapp/data/
+

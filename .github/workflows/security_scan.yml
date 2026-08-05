@@ -1,0 +1,43 @@
+# Run the scanner and optionally upload SARIF for GitHub Code Scanning
+name: Security Scan
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
+      actions: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Risk Ripple
+        run: |
+          python scanner.py . --output-dir scan-output --format all
+          echo "--- Summary ---"
+          ls -la scan-output/
+
+      - name: Upload SARIF (Code Scanning)
+        if: success()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: scan-output/security_report.sarif
+        continue-on-error: true

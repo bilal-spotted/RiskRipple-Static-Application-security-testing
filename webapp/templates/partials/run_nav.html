@@ -1,0 +1,31 @@
+<section class="panel reveal" style="--delay: 0s;">
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">Run ID</div>
+      <div class="stat-value mono-wrap text-wrap" title="{{ run.id }}">{{ run.id }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Status</div>
+      <div class="stat-value">
+        <span class="status-chip {{ run.status | status_class }}">{{ run.status }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Target</div>
+      <div class="stat-value is-path" title="{{ run.target_resolved or run.target }}">
+        {{ run.target_resolved or run.target }}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Created</div>
+      <div class="stat-value">{{ run.created_at | fmt_ts }}</div>
+    </div>
+  </div>
+  <div class="nav" style="margin-top: 14px;">
+    <a class="nav-link {% if active_tab == 'overview' %}is-active{% endif %}" href="{{ url_for('run_overview', run_id=run.id) }}">Overview</a>
+    <a class="nav-link {% if active_tab == 'findings' %}is-active{% endif %}" href="{{ url_for('run_findings', run_id=run.id) }}">Findings</a>
+    <a class="nav-link {% if active_tab == 'hygiene' %}is-active{% endif %}" href="{{ url_for('run_hygiene', run_id=run.id) }}">Hygiene</a>
+    <a class="nav-link {% if active_tab == 'taint' %}is-active{% endif %}" href="{{ url_for('run_taint', run_id=run.id) }}">Taint</a>
+    <a class="nav-link {% if active_tab == 'reports' %}is-active{% endif %}" href="{{ url_for('run_reports', run_id=run.id) }}">Reports</a>
+  </div>
+</section>

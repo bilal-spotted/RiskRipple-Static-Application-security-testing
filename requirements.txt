@@ -1,0 +1,5 @@
+python-dotenv
+GitPython
+openai
+PyYAML>=5.4
+Flask>=2.3

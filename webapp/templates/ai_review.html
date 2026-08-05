@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>AI assisted review</h1>
+  <p>Optional OpenAI powered review for a selected file or pasted snippet.</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  <form method="post">
+    <div class="form-grid">
+      <div class="form-field">
+        <label for="target">Repository target</label>
+        <input class="input" id="target" name="target" type="text" value="{{ target }}" placeholder="Path to repository">
+        <div class="helper">Local path only (clone GitHub repos first) to load file options.</div>
+      </div>
+      <div class="form-field">
+        <label for="selected_file">File selector</label>
+        <select class="select" id="selected_file" name="selected_file">
+          <option value="">Select a file</option>
+          {% for item in file_options %}
+          <option value="{{ item.value }}" {% if item.value == selected_file %}selected{% endif %}>{{ item.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="hero-actions" style="margin-top: 16px;">
+      <button class="btn btn-outline" name="action" value="load_files" type="submit">Load files</button>
+      <button class="btn btn-ghost" name="action" value="load_file" type="submit">Load selected file</button>
+    </div>
+
+    <div class="form-field" style="margin-top: 18px;">
+      <label for="snippet">Code snippet</label>
+      <textarea class="textarea" id="snippet" name="snippet" placeholder="Paste code or load a file above">{{ snippet }}</textarea>
+      <div class="helper">The AI review analyzes this snippet only. Long files are truncated to 6k chars.</div>
+    </div>
+
+    <div class="hero-actions" style="margin-top: 16px;">
+      <button class="btn btn-primary" name="action" value="run_review" type="submit">Run AI review</button>
+    </div>
+  </form>
+</section>
+
+<section class="panel reveal" style="--delay: 0.1s;">
+  <h2>Review output</h2>
+  {% if review_result %}
+  <div class="code-block">{{ review_result }}</div>
+  {% else %}
+  <div class="empty-state">No AI output yet. Provide a snippet and run a review.</div>
+  {% endif %}
+</section>
+{% endblock %}
