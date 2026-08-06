@@ -194,7 +194,7 @@ def _execute_scan(run_id: str, options: Dict[str, Any]) -> None:
 
         log_event("Enriching and normalizing findings", SCAN_STEPS[4][1])
         findings = enrich_findings(findings)
-        findings = normalize_and_deduplicate_findings(findings)
+        findings = normalize_and_deduplicate_findings(findings, root=target)
 
         report_data = build_report_data(
             target,

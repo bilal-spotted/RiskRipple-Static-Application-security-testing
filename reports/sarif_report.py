@@ -13,6 +13,39 @@ from core.taint_analysis import get_taint_rule_metadata
 SARIF_VERSION = "2.1.0"
 SARIF_SCHEMA = "https://json.schemastore.org/sarif-2.1.0.json"
 
+TOOL_NAME = "Risk Ripple"
+TOOL_INFORMATION_URI = (
+    "https://github.com/bilal-spotted/RiskRipple-Static-Application-security-testing"
+)
+
+
+def _tool_version() -> str:
+    """
+    Report the version from package metadata, falling back to pyproject.
+
+    Single-sourced so the version in SARIF output cannot drift from the one
+    declared in pyproject.toml, as a hardcoded copy previously did.
+    """
+    try:
+        from importlib.metadata import PackageNotFoundError, version
+
+        try:
+            return version("ai-repo-security-scanner")
+        except PackageNotFoundError:
+            pass
+    except ImportError:  # pragma: no cover - importlib.metadata is stdlib on 3.10+
+        pass
+
+    pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
+    try:
+        for line in pyproject.read_text(encoding="utf-8").splitlines():
+            stripped = line.strip()
+            if stripped.startswith("version"):
+                return stripped.split("=", 1)[1].strip().strip("\"'")
+    except (OSError, IndexError):
+        pass
+    return "0.0.0"
+
 
 def generate_sarif_report(report_data: Dict[str, Any], output_path) -> None:
     """
@@ -47,9 +80,9 @@ def generate_sarif_report(report_data: Dict[str, Any], output_path) -> None:
             {
                 "tool": {
                     "driver": {
-                        "name": "Risk Ripple",
-                        "informationUri": "https://example.com",
-                        "version": "1.0.0",
+                        "name": TOOL_NAME,
+                        "informationUri": TOOL_INFORMATION_URI,
+                        "version": _tool_version(),
                         "rules": sarif_rules,
                     }
                 },

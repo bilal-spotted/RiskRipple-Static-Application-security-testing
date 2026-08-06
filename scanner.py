@@ -372,7 +372,9 @@ def main() -> None:
         print("[4/5] Checking repository hygiene")
     findings = findings + run_hygiene_checks(str(target))
     findings = enrich_findings(findings)
-    findings = normalize_and_deduplicate_findings(findings)
+    # Paths are made relative to the scan target here so every report format and
+    # every fingerprint sees the same portable path.
+    findings = normalize_and_deduplicate_findings(findings, root=target)
 
     if errors and (args.verbose or not args.quiet):
         for err in errors:
