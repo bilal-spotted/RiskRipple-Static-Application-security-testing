@@ -1,16 +1,80 @@
 """
 Repository hygiene and secure development checks.
 
-Detects sensitive artifacts, tracked files that should be ignored,
-and .gitignore gaps. Findings include remediation guidance.
+Detects sensitive artifacts, files that should not be committed, and
+.gitignore gaps. Findings include remediation guidance.
+
+These rules describe what is *in the repository*, so they consult git rather
+than inferring from the filesystem. A ``__pycache__`` directory sitting on disk
+is normal; one in the git index is the problem. Findings are therefore graded
+by the file's relationship to the repository:
+
+* **tracked** - already committed, reported at full severity
+* **untracked** - not committed and not ignored, so at risk of being added;
+  reported one severity level lower
+* **ignored** - correctly excluded, not reported at all
+* **unknown** - no git metadata (a plain directory, or git unavailable);
+  reported at full severity but worded without asserting tracking
+
+Credential detection is delegated to :mod:`core.secrets_detection`, which the
+pre-commit hook shares, so the two cannot disagree about what counts as a
+secret.
 """
 
 from __future__ import annotations
 
 import os
 import re
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any, Dict, List, Optional, Tuple
+
+from core.git_context import (
+    STATUS_IGNORED,
+    STATUS_TRACKED,
+    STATUS_UNKNOWN,
+    STATUS_UNTRACKED,
+    GitContext,
+)
+from core.secrets_detection import (
+    is_env_file,
+    is_env_template,
+    is_scannable_text_file,
+)
+from core.secrets_detection import (
+    scan_file as scan_file_for_secrets,
+)
+
+# Severity ladder used when downgrading a finding for an uncommitted file.
+_SEVERITY_DOWNGRADE = {
+    "CRITICAL": "HIGH",
+    "HIGH": "MEDIUM",
+    "MEDIUM": "LOW",
+    "LOW": "LOW",
+}
+
+
+def _grade_severity(base_severity: str, status: str) -> str:
+    """Lower the severity of an artifact that is not actually committed."""
+    if status == STATUS_UNTRACKED:
+        return _SEVERITY_DOWNGRADE.get(base_severity, base_severity)
+    return base_severity
+
+
+def _status_note(status: str) -> str:
+    """Explain how the file's git status affects the finding."""
+    if status == STATUS_TRACKED:
+        return " This file is tracked by git, so its contents are in the repository history."
+    if status == STATUS_UNTRACKED:
+        return (
+            " This file is not tracked and not ignored, so it is not in the repository yet"
+            " but would be included by a bulk 'git add'. Add it to .gitignore."
+        )
+    if status == STATUS_UNKNOWN:
+        return (
+            " Git status could not be determined, so it is unknown whether this file is committed."
+        )
+    return ""
+
 
 # Sensitive filenames or patterns (exact name or suffix)
 # Env/secret files (key files id_rsa etc. are handled separately as RH003)
@@ -108,128 +172,60 @@ def _make_finding(
     return f
 
 
-def _scan_file_for_secrets(
-    file_path_abs: str,
-    rel_path_norm: str,
-    name_lower: str,
-    findings: List[Dict[str, Any]],
-    seen_paths: set[str],
-) -> None:
+def _collect_candidates(root: Path) -> List[Dict[str, Any]]:
     """
-    Scan file content for secret patterns (OpenAI, AWS, GitHub, etc.).
-    If any pattern matches, append a CRITICAL finding. Skips binary/extensions we don't scan.
+    Walk the tree and gather every potential hygiene finding.
+
+    Collection is separated from reporting so git status can be resolved for the
+    whole batch in a single call, rather than spawning a git process per
+    candidate. Each entry carries its absolute path (for the git query), its
+    relative path (for the report), and the finding to emit.
     """
-    # Only scan text-like files to avoid binary and huge files
-    text_extensions = (
-        ".py",
-        ".env",
-        ".json",
-        ".yaml",
-        ".yml",
-        ".txt",
-        ".md",
-        ".cfg",
-        ".ini",
-        ".toml",
-        ".conf",
-    )
-    if not name_lower.startswith(".env") and not any(
-        name_lower.endswith(ext) or name_lower.endswith(ext + ".bak") for ext in text_extensions
-    ):
-        return
-    try:
-        content = Path(file_path_abs).read_text(encoding="utf-8", errors="ignore")
-    except OSError:
-        return
-    # Cap size to avoid scanning huge files
-    if len(content) > 512 * 1024:
-        return
-    for pattern_name, pattern, _ in SECRET_PATTERNS:
-        if pattern.search(content):
-            key_finding_path = rel_path_norm + " (secret: " + pattern_name + ")"
-            if key_finding_path not in seen_paths:
-                seen_paths.add(key_finding_path)
-                findings.append(
-                    _make_finding(
-                        rule_id="RH005",
-                        title="Secret or API key detected in file",
-                        severity="CRITICAL",
-                        category="Secret Exposure",
-                        file_path=rel_path_norm,
-                        description=f"File content matches secret pattern: {pattern_name}. Treat as exposed.",
-                        recommendation="Revoke and rotate the credential immediately. Remove from repo and consider purging from git history.",
-                        remediation="Revoke/rotate the key in the provider dashboard. Remove from git: git rm --cached "
-                        + rel_path_norm
-                        + ". Add to .gitignore. Consider: git filter-branch or BFG to remove from history.",
-                    )
-                )
-            return  # One finding per file for secrets
-    # Legacy: also check OpenAI-style with older pattern for .env-like files
-    if name_lower.startswith(".env") or "env" in name_lower and name_lower.startswith("."):
-        if API_KEY_PATTERN.search(content):
-            key_finding_path = rel_path_norm + " (contains API key pattern)"
-            if key_finding_path not in seen_paths:
-                seen_paths.add(key_finding_path)
-                findings.append(
-                    _make_finding(
-                        rule_id="RH005",
-                        title="Secret or API key detected in file",
-                        severity="CRITICAL",
-                        category="Secret Exposure",
-                        file_path=rel_path_norm,
-                        description="File content matches API key pattern (e.g. sk-...). Treat as exposed.",
-                        recommendation="Revoke and rotate the key immediately. Remove from repo and add to .gitignore.",
-                        remediation="Revoke/rotate the API key in the provider dashboard. Remove file from git: git rm --cached "
-                        + rel_path_norm
-                        + ". Add to .gitignore. Never commit this file again.",
-                    )
-                )
+    candidates: List[Dict[str, Any]] = []
+    seen: set[str] = set()
 
-
-def scan_repository_hygiene(root_path: str) -> List[Dict[str, Any]]:
-    """
-    Walk the repository and detect sensitive artifacts and hygiene issues.
-
-    Returns a list of findings (same schema as core.analyzer) for:
-    - Tracked .env and secret-like env files
-    - Tracked .pyc and __pycache__
-    - Private key and certificate artifacts
-    - Suspicious API key patterns in text files
-    """
-    root = Path(root_path).resolve()
-    if not root.is_dir():
-        return []
-
-    findings: List[Dict[str, Any]] = []
-    seen_paths: set[str] = set()
+    def add(abs_path: str, rel_path: str, finding: Dict[str, Any], is_dir: bool = False) -> None:
+        candidates.append(
+            {"abs_path": abs_path, "rel_path": rel_path, "finding": finding, "is_dir": is_dir}
+        )
 
     for dirpath, dirnames, filenames in os.walk(root):
         dirpath_norm = os.path.normpath(dirpath)
         rel_dir = os.path.relpath(dirpath_norm, root) if dirpath_norm != str(root) else "."
 
-        # Check directory names (e.g. __pycache__); skip descent into excluded/sensitive dirs
         for d in list(dirnames):
             if d in (".git", "venv", ".venv", "node_modules", "build", "dist"):
                 dirnames.remove(d)
             elif d in SENSITIVE_DIR_NAMES:
-                path_key = os.path.join(rel_dir, d).replace("\\", "/")
-                if path_key not in seen_paths:
-                    seen_paths.add(path_key)
-                    findings.append(
+                path_key = PurePath(os.path.join(rel_dir, d)).as_posix()
+                if path_key.startswith("./"):
+                    path_key = path_key[2:]
+                if path_key not in seen:
+                    seen.add(path_key)
+                    add(
+                        os.path.join(dirpath, d),
+                        path_key,
                         _make_finding(
                             rule_id="RH001",
-                            title="Tracked cache or build directory",
+                            title="Cache or build directory in repository",
                             severity="MEDIUM",
                             category="Repository Hygiene",
                             file_path=path_key,
-                            description=f"Directory '{d}' should not be committed. It is generated/cache content.",
-                            recommendation="Add this directory to .gitignore and remove from git history if already tracked.",
+                            description=(
+                                "Directory '" + d + "' holds generated or cache content "
+                                "and should not be committed."
+                            ),
+                            recommendation=(
+                                "Add this directory to .gitignore, and remove it from the index "
+                                "with 'git rm -r --cached' if it is already tracked."
+                            ),
                             remediation="Add to .gitignore: "
                             + (d + "/" if not d.endswith("/") else d)
                             + ". Then run: git rm -r --cached "
                             + path_key
                             + " (if already tracked).",
-                        )
+                        ),
+                        is_dir=True,
                     )
                 dirnames.remove(d)
 
@@ -239,42 +235,46 @@ def scan_repository_hygiene(root_path: str) -> List[Dict[str, Any]]:
                 rel_path = os.path.relpath(file_path_abs, root)
             except ValueError:
                 continue
-            rel_path_norm = rel_path.replace("\\", "/")
-
-            if rel_path_norm in seen_paths:
-                continue
-
+            rel_path_norm = PurePath(rel_path).as_posix()
             name_lower = filename.lower()
             ext = os.path.splitext(filename)[1].lower()
 
-            # .env and env-like files
-            if name_lower in SENSITIVE_FILE_NAMES or name_lower.startswith(".env."):
-                seen_paths.add(rel_path_norm)
-                findings.append(
+            # Environment templates such as .env.example exist to be committed.
+            if is_env_template(filename):
+                continue
+
+            if is_env_file(filename) or name_lower in SENSITIVE_FILE_NAMES:
+                add(
+                    file_path_abs,
+                    rel_path_norm,
                     _make_finding(
                         rule_id="RH002",
-                        title="Environment or secret file tracked",
+                        title="Environment or secret file in repository",
                         severity="HIGH",
                         category="Sensitive Artifacts",
                         file_path=rel_path_norm,
                         description="Environment or secret-bearing file should not be committed.",
-                        recommendation="Add .env (and variants) to .gitignore. Use environment variables or a secrets manager at runtime.",
-                        remediation="Add '.env' and '.env.*' to .gitignore. If already committed: revoke/rotate any exposed secrets, then run: git rm --cached "
+                        recommendation=(
+                            "Add .env (and variants) to .gitignore. Supply configuration through "
+                            "environment variables or a secrets manager at runtime."
+                        ),
+                        remediation="Add '.env' and '.env.*' to .gitignore. If already committed: "
+                        "revoke and rotate any exposed secrets, then run: git rm --cached "
                         + rel_path_norm
-                        + " and commit. Do not commit the file again.",
-                    )
+                        + " and commit.",
+                    ),
                 )
                 continue
 
-            # Private keys and certs
             if name_lower in ("id_rsa", "id_dsa", "id_ecdsa", "id_ed25519") or ext in (
                 ".pem",
                 ".key",
                 ".p12",
                 ".pfx",
             ):
-                seen_paths.add(rel_path_norm)
-                findings.append(
+                add(
+                    file_path_abs,
+                    rel_path_norm,
                     _make_finding(
                         rule_id="RH003",
                         title="Private key or certificate artifact",
@@ -282,52 +282,132 @@ def scan_repository_hygiene(root_path: str) -> List[Dict[str, Any]]:
                         category="Secret Exposure",
                         file_path=rel_path_norm,
                         description="Private key or certificate file should never be committed.",
-                        recommendation="Remove from repository and rotate/revoke the affected credentials immediately.",
-                        remediation="Revoke/rotate the key or certificate. Remove from repo: git rm --cached "
+                        recommendation=(
+                            "Remove it from the repository and rotate or revoke the affected "
+                            "credentials immediately."
+                        ),
+                        remediation="Revoke/rotate the key or certificate. Remove from repo: "
+                        "git rm --cached "
                         + rel_path_norm
-                        + ". Add pattern to .gitignore (e.g. *.pem, *.key, id_rsa).",
-                    )
+                        + ". Add a pattern to .gitignore (e.g. *.pem, *.key, id_rsa).",
+                    ),
                 )
                 continue
 
-            # .pyc and .pyo files
-            if ext == ".pyc" or name_lower.endswith(".pyc"):
-                seen_paths.add(rel_path_norm)
-                findings.append(
+            if ext == ".pyc":
+                add(
+                    file_path_abs,
+                    rel_path_norm,
                     _make_finding(
                         rule_id="RH004",
-                        title="Python bytecode file tracked",
+                        title="Python bytecode file in repository",
                         severity="LOW",
                         category="Repository Hygiene",
                         file_path=rel_path_norm,
                         description="Compiled .pyc file should not be committed.",
-                        recommendation="Add *.pyc and __pycache__/ to .gitignore. Remove cached: git rm --cached '*.pyc'.",
-                        remediation="Add '*.pyc' and '__pycache__/' to .gitignore. Run: find . -name '*.pyc' -exec git rm --cached {} \\; (or equivalent).",
-                    )
+                        recommendation="Add *.pyc and __pycache__/ to .gitignore.",
+                        remediation="Add '*.pyc' and '__pycache__/' to .gitignore. "
+                        "Run: git rm --cached for anything already tracked.",
+                    ),
                 )
-            elif ext == ".pyo" or name_lower.endswith(".pyo"):
-                seen_paths.add(rel_path_norm)
-                findings.append(
+            elif ext == ".pyo":
+                add(
+                    file_path_abs,
+                    rel_path_norm,
                     _make_finding(
                         rule_id="RH004b",
-                        title="Python optimized bytecode file tracked",
+                        title="Python optimized bytecode file in repository",
                         severity="LOW",
                         category="Repository Hygiene",
                         file_path=rel_path_norm,
                         description="Compiled .pyo file should not be committed.",
-                        recommendation="Add *.pyo and __pycache__/ to .gitignore. Remove from index: git rm --cached '*.pyo'.",
-                        remediation="Add '*.pyo' and '__pycache__/' to .gitignore. Run: git rm --cached '*.pyo' (or find and remove).",
-                    )
+                        recommendation="Add *.pyo and __pycache__/ to .gitignore.",
+                        remediation="Add '*.pyo' and '__pycache__/' to .gitignore. "
+                        "Run: git rm --cached for anything already tracked.",
+                    ),
                 )
 
-            # Scan text-like files for secret patterns -> CRITICAL finding
-            _scan_file_for_secrets(
-                file_path_abs=file_path_abs,
-                rel_path_norm=rel_path_norm,
-                name_lower=name_lower,
-                findings=findings,
-                seen_paths=seen_paths,
-            )
+            if not is_scannable_text_file(filename):
+                continue
+
+            for match in scan_file_for_secrets(file_path_abs):
+                key = rel_path_norm + "|" + match.name
+                if key in seen:
+                    continue
+                seen.add(key)
+                if match.is_placeholder:
+                    description = (
+                        "File content matches the " + match.name + " signature, but the value "
+                        "looks like a placeholder or example rather than a live credential. "
+                        "Confirm it is not real."
+                    )
+                    severity = "LOW"
+                else:
+                    description = (
+                        "File content matches the " + match.name + " signature. "
+                        "Treat it as exposed."
+                    )
+                    severity = "CRITICAL"
+                add(
+                    file_path_abs,
+                    rel_path_norm,
+                    _make_finding(
+                        rule_id="RH005",
+                        title="Secret or API key detected in file",
+                        severity=severity,
+                        category="Secret Exposure",
+                        file_path=rel_path_norm,
+                        description=description,
+                        recommendation=(
+                            "Revoke and rotate the credential immediately, remove it from the "
+                            "repository, and consider purging it from history."
+                        ),
+                        remediation="Revoke/rotate the credential with the provider. "
+                        "Remove from git: git rm --cached "
+                        + rel_path_norm
+                        + ". Add to .gitignore. To purge history, use git filter-repo or BFG.",
+                    ),
+                )
+
+    return candidates
+
+
+def scan_repository_hygiene(
+    root_path: str, git: Optional[GitContext] = None
+) -> List[Dict[str, Any]]:
+    """
+    Detect sensitive artifacts and hygiene problems in a repository.
+
+    Candidates are gathered from the filesystem, then graded against git:
+    ignored files are dropped entirely, and files present but not committed are
+    reported at reduced severity. Pass ``git`` to reuse an already-discovered
+    context; otherwise one is discovered for ``root_path``.
+    """
+    root = Path(root_path).resolve()
+    if not root.is_dir():
+        return []
+
+    context = git if git is not None else GitContext.discover(root)
+    candidates = _collect_candidates(root)
+    context.prime_ignored([c["abs_path"] for c in candidates])
+
+    findings: List[Dict[str, Any]] = []
+    for candidate in candidates:
+        status = context.status_of(candidate["abs_path"])
+
+        # A directory counts as committed when any file beneath it is tracked.
+        if candidate["is_dir"] and status != STATUS_TRACKED:
+            if context.has_tracked_under(candidate["abs_path"]):
+                status = STATUS_TRACKED
+
+        if status == STATUS_IGNORED:
+            continue
+
+        finding = dict(candidate["finding"])
+        finding["severity"] = _grade_severity(finding["severity"], status)
+        finding["description"] = finding.get("description", "") + _status_note(status)
+        finding["git_status"] = status
+        findings.append(finding)
 
     return findings
 
