@@ -52,10 +52,60 @@
 
 <section class="panel reveal" style="--delay: 0.1s;">
   <h2>Review output</h2>
-  {% if review_result %}
-  <div class="code-block">{{ review_result }}</div>
+
+  {% if not outcome %}
+    {% if ai_configured %}
+    <div class="empty-state">No AI output yet. Provide a snippet and run a review.</div>
+    {% else %}
+    <div class="empty-state">
+      AI review is not configured. Set <code>GEMINI_API_KEY</code> to enable it.
+      Every other feature works without it.
+    </div>
+    {% endif %}
+
+  {% elif outcome.errors %}
+    {% for err in outcome.errors %}
+    <div class="empty-state"><strong>{{ err.kind }}</strong> — {{ err.message }}</div>
+    {% endfor %}
+
   {% else %}
-  <div class="empty-state">No AI output yet. Provide a snippet and run a review.</div>
+    <p class="helper">
+      {{ outcome.status }}
+      Model <code>{{ outcome.model }}</code> via <code>{{ outcome.provider }}</code>.
+    </p>
+    <p class="helper">
+      These findings are advisory and are not included in the deterministic risk score.
+    </p>
+
+    {% if outcome.findings %}
+    <table class="table">
+      <thead>
+        <tr><th>Severity</th><th>Category</th><th>Line</th><th>Title</th></tr>
+      </thead>
+      <tbody>
+        {% for f in outcome.findings %}
+        <tr>
+          <td><span class="badge {{ f.severity | severity_class }}">{{ f.severity }}</span></td>
+          <td>{{ f.category }}</td>
+          <td>{{ f.line_number }}</td>
+          <td>{{ f.title }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% for f in outcome.findings %}
+    <div class="panel" style="margin-top: 12px;">
+      <h3>{{ f.title }}</h3>
+      <p>{{ f.description }}</p>
+      {% if f.reasoning %}<p class="helper"><strong>Reasoning:</strong> {{ f.reasoning }}</p>{% endif %}
+      {% if f.recommendation %}<p class="helper"><strong>Recommendation:</strong> {{ f.recommendation }}</p>{% endif %}
+      {% if f.cwe %}<p class="helper">{{ f.cwe }}</p>{% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state">No advisory findings for this snippet.</div>
+    {% endif %}
   {% endif %}
 </section>
 {% endblock %}

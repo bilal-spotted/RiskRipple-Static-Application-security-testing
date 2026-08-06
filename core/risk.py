@@ -129,6 +129,23 @@ def _normalize_confidence(confidence: str) -> str:
     return str(confidence or "MEDIUM").upper()
 
 
+def is_advisory(finding: Dict[str, Any]) -> bool:
+    """
+    True for findings that must not influence the risk score.
+
+    AI-assisted review is advisory: its findings are a model's judgement, not a
+    rule match. Scoring them would break the guarantee that every point of the
+    score traces to a documented rule and weight, which is the reason this
+    scanner is auditable at all. They are reported, attributed, and excluded.
+    """
+    return bool(finding.get("advisory")) or str(finding.get("detection_type", "")).lower() == "ai"
+
+
+def scoreable_findings(findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Return only the deterministic findings that contribute to the score."""
+    return [f for f in findings if not is_advisory(f)]
+
+
 def _get_category(finding: Dict[str, Any]) -> str:
     return str(finding.get("category") or "General").strip()
 
@@ -226,7 +243,7 @@ def summarize_severity_counts(findings: List[Dict[str, Any]]) -> Dict[str, int]:
     to LOW (backward compatibility).
     """
     counts = {s: 0 for s in SEVERITY_LEVELS}
-    for f in findings:
+    for f in scoreable_findings(findings):
         sev = _normalize_severity(f.get("severity", "LOW"))
         if sev in counts:
             counts[sev] += 1
@@ -282,6 +299,7 @@ def compute_risk_breakdown(findings: List[Dict[str, Any]]) -> Tuple[int, Dict[st
         "unique_files_factor": 0.0,
         "critical_category_contribution": 0.0,
     }
+    findings = scoreable_findings(findings)
     if not findings:
         return 0, empty_breakdown
 
@@ -387,7 +405,7 @@ def get_top_risky_files(
 
     Each item: file_path, risk_score, findings_count, severity_counts.
     """
-    grouped = group_findings_by_file(findings)
+    grouped = group_findings_by_file(scoreable_findings(findings))
     ranked: List[Dict[str, Any]] = []
     for file_path, file_findings in grouped.items():
         risk_score = calculate_file_risk_score(file_findings)

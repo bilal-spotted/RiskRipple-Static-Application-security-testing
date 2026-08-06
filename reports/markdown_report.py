@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Optional, Union
 
 
 def generate_markdown_report(report_data: Dict[str, Any], output_path: Union[str, Path]) -> None:
@@ -209,6 +209,8 @@ def generate_markdown_report(report_data: Dict[str, Any], output_path: Union[str
 
             lines.append("")
 
+    _append_ai_section(lines, report_data.get("ai_review"))
+
     # Scan errors
     lines.append("## Scan Errors\n")
 
@@ -224,3 +226,71 @@ def generate_markdown_report(report_data: Dict[str, Any], output_path: Union[str
 
     output_path = Path(output_path)
     output_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def _append_ai_section(lines: List[str], ai_review: Optional[Dict[str, Any]]) -> None:
+    """
+    Render the advisory AI section.
+
+    Kept visually and structurally separate from the findings table because
+    these results are a model's judgement, not a rule match, and they are
+    excluded from the risk score.
+    """
+    if not ai_review:
+        return
+
+    lines.append("## AI-Assisted Review (Advisory)\n")
+
+    if not ai_review.get("enabled"):
+        lines.append(f"_{ai_review.get('status', 'AI review not enabled.')}_")
+        lines.append("")
+        return
+
+    lines.append(
+        f"Model: `{ai_review.get('model', 'unknown')}` "
+        f"via `{ai_review.get('provider', 'unknown')}`. "
+        f"Files reviewed: {ai_review.get('files_reviewed', 0)}."
+    )
+    lines.append("")
+    lines.append(
+        "> These findings are advisory and are **not** included in the risk score. "
+        "The score remains fully deterministic and rule-based."
+    )
+    lines.append("")
+
+    ai_findings = ai_review.get("findings") or []
+    if not ai_findings:
+        lines.append("_No advisory findings._")
+        lines.append("")
+    else:
+        lines.append("| Severity | Category | File | Line | Title |")
+        lines.append("|---|---|---|---|---|")
+        for f in ai_findings:
+            lines.append(
+                f"| {f.get('severity', '')} | {f.get('category', '')} | "
+                f"`{f.get('file_path', '')}` | {f.get('line_number', '')} | "
+                f"{f.get('title', '')} |"
+            )
+        lines.append("")
+
+        for f in ai_findings:
+            lines.append(f"**{f.get('title', '')}** — `{f.get('file_path', '')}`")
+            lines.append("")
+            lines.append(f"{f.get('description', '')}")
+            if f.get("reasoning"):
+                lines.append("")
+                lines.append(f"_Reasoning:_ {f['reasoning']}")
+            if f.get("recommendation"):
+                lines.append("")
+                lines.append(f"_Recommendation:_ {f['recommendation']}")
+            lines.append("")
+
+    errors = ai_review.get("errors") or []
+    if errors:
+        lines.append("**AI review problems:**")
+        lines.append("")
+        for err in errors:
+            lines.append(
+                f"- `{err.get('file', '')}` ({err.get('kind', '')}): {err.get('message', '')}"
+            )
+        lines.append("")

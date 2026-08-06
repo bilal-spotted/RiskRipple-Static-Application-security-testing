@@ -24,8 +24,6 @@ classifiers = [
 ]
 dependencies = [
     "PyYAML>=5.4",
-    "python-dotenv",
-    "GitPython",
     "Flask>=2.3",
 ]
 
@@ -34,7 +32,6 @@ dev = [
     "pytest>=7.0",
     "ruff>=0.1.0",
 ]
-openai = ["openai"]
 
 [project.scripts]
 ai-repo-scanner = "scanner:main"

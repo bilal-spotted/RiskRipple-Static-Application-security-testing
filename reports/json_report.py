@@ -35,6 +35,12 @@ def generate_json_report(report_data: Dict[str, Any], output_path: Union[str, Pa
         "scan_errors": report_data.get("scan_errors", []),
     }
 
+    # Advisory AI results are exported under their own key so consumers cannot
+    # mistake a model's judgement for a deterministic rule match.
+    ai_review = report_data.get("ai_review")
+    if ai_review:
+        output["ai_review"] = ai_review
+
     output_path = Path(output_path)
 
     with open(output_path, "w", encoding="utf-8") as f:

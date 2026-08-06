@@ -13,8 +13,9 @@ import logging
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
+from core.ai_review import AIReviewOutcome, review_files
 from core.analyzer import analyze_file
 from core.normalize import normalize_and_deduplicate_findings
 from core.repo_hygiene import check_gitignore_hygiene, scan_repository_hygiene
@@ -107,6 +108,20 @@ def parse_args() -> argparse.Namespace:
         default=None,
         metavar="N",
         help="Exit with code 1 if repository risk score is >= N",
+    )
+
+    parser.add_argument(
+        "--ai-review",
+        action="store_true",
+        help="Add optional AI-assisted review (requires GEMINI_API_KEY). Findings are advisory and do not affect the risk score.",
+    )
+
+    parser.add_argument(
+        "--ai-max-files",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Maximum files to send for AI review (default: 10)",
     )
 
     parser.add_argument(
@@ -242,18 +257,23 @@ def build_report_data(
     errors: List[Dict[str, str]],
     top_files_n: int = 5,
     top_categories_n: int = 10,
+    ai_outcome: Optional[AIReviewOutcome] = None,
 ) -> Dict[str, Any]:
     """
     Build the report payload from scan results and risk summary.
 
-    Used by main() before passing to report generators.
+    AI results are carried under their own key rather than merged into
+    ``findings``. They are advisory and excluded from scoring, and keeping them
+    separate makes that impossible to get wrong downstream.
     """
     risk_summary = build_risk_summary(
         findings,
         top_files_n=top_files_n,
         top_categories_n=top_categories_n,
     )
+    ai_section = ai_outcome.to_dict() if ai_outcome is not None else None
     return {
+        "ai_review": ai_section,
         "target": str(target),
         "files_scanned": len(files),
         "total_findings": len(findings),
@@ -350,8 +370,8 @@ def main() -> None:
         sys.exit(1)
 
     if not args.quiet:
-        print("[1/5] Using local directory:", target)
-        print("[2/5] Collecting source files")
+        print("[1/6] Using local directory:", target)
+        print("[2/6] Collecting source files")
     try:
         files = get_source_files(str(target))
     except Exception as e:
@@ -366,10 +386,10 @@ def main() -> None:
 
     if not args.quiet:
         print(f"Found {len(files)} files to scan.")
-        print("[3/5] Scanning repository (SAST)")
+        print("[3/6] Scanning repository (SAST)")
     findings, errors = scan_repository(files, workers=args.workers)
     if not args.quiet:
-        print("[4/5] Checking repository hygiene")
+        print("[4/6] Checking repository hygiene")
     findings = findings + run_hygiene_checks(str(target))
     findings = enrich_findings(findings)
     # Paths are made relative to the scan target here so every report format and
@@ -380,8 +400,21 @@ def main() -> None:
         for err in errors:
             logger.warning("Scan error: %s — %s", err.get("file"), err.get("error"))
 
+    ai_outcome = None
+    if args.ai_review:
+        if not args.quiet:
+            print("[5/6] Running AI-assisted review")
+        ai_outcome = review_files(files, root=str(target), max_files=args.ai_max_files)
+        if not args.quiet:
+            print(f"      {ai_outcome.status}")
+        for err in ai_outcome.errors:
+            logger.warning("AI review (%s): %s", err.get("kind"), err.get("message"))
+
     if not args.quiet:
         print_summary(len(files), findings, args.top_files)
+        if ai_outcome is not None and ai_outcome.findings:
+            print(f"Advisory AI findings: {len(ai_outcome.findings)} (not included in risk score)")
+            print()
 
     report_data = build_report_data(
         target,
@@ -390,9 +423,10 @@ def main() -> None:
         errors,
         top_files_n=args.top_files,
         top_categories_n=10,
+        ai_outcome=ai_outcome,
     )
     if not args.quiet:
-        print("[5/5] Saving reports")
+        print("[6/6] Saving reports")
     write_reports(report_data, Path(args.output_dir), list(args.format), quiet=args.quiet)
     if not args.quiet:
         print("\nScan completed.")

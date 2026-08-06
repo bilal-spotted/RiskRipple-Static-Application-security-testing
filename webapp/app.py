@@ -18,7 +18,7 @@ from flask import (
     url_for,
 )
 
-from core.ai_review import ai_review
+from core.ai_review import ai_review_available, review_source
 from core.rule_registry import load_metadata
 from io_utils.file_loader import collect_source_files, read_file_content
 from tools.check_secrets import scan_repository as scan_secrets
@@ -359,10 +359,10 @@ def create_app() -> Flask:
     @app.route("/ai-review", methods=["GET", "POST"])
     def ai_review_page() -> str:
         target = request.args.get("target", "").strip()
-        review_result = ""
         snippet = ""
         selected_file = ""
         error = ""
+        outcome = None
 
         files, file_options = _enumerate_reviewable_files(target)
 
@@ -393,8 +393,8 @@ def create_app() -> Flask:
                     snippet = read_file_content(allowed_path)
 
             if action == "run_review" and snippet and not error:
-                file_label = selected_file or "snippet"
-                review_result = ai_review(snippet, file_label)
+                label = selected_file or "snippet"
+                outcome = review_source(label, snippet).to_dict()
 
         return render_template(
             "ai_review.html",
@@ -403,7 +403,8 @@ def create_app() -> Flask:
             file_options=file_options,
             selected_file=selected_file,
             snippet=snippet,
-            review_result=review_result,
+            outcome=outcome,
+            ai_configured=ai_review_available(),
             error=error,
         )
 
