@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 
 # Default set of extensions to scan. Can be overridden via CLI.

@@ -117,7 +117,11 @@ def create_app() -> Flask:
         return [f for f in findings if f.get("category") in categories]
 
     def _get_taint_findings(findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        return [f for f in findings if f.get("taint_flow") or str(f.get("detection_type", "")).lower() == "taint"]
+        return [
+            f
+            for f in findings
+            if f.get("taint_flow") or str(f.get("detection_type", "")).lower() == "taint"
+        ]
 
     @app.route("/")
     def home() -> str:
@@ -216,7 +220,9 @@ def create_app() -> Flask:
         report = _load_report_or_none(run_id)
         if not run:
             return render_template("run_not_found.html", active_page="runs"), 404
-        findings = _decorate_findings(_get_hygiene_findings(report.get("findings", []) if report else []))
+        findings = _decorate_findings(
+            _get_hygiene_findings(report.get("findings", []) if report else [])
+        )
         return render_template(
             "run_hygiene.html",
             run=run,
@@ -231,7 +237,9 @@ def create_app() -> Flask:
         report = _load_report_or_none(run_id)
         if not run:
             return render_template("run_not_found.html", active_page="runs"), 404
-        findings = _decorate_findings(_get_taint_findings(report.get("findings", []) if report else []))
+        findings = _decorate_findings(
+            _get_taint_findings(report.get("findings", []) if report else [])
+        )
         return render_template(
             "run_taint.html",
             run=run,
@@ -340,7 +348,9 @@ def create_app() -> Flask:
             else:
                 results = scan_secrets(root, include_test_fixtures=include_fixtures)
                 issues = [{"path": str(path), "issue": issue} for path, issue in results]
-                status = "No potential secrets found." if not issues else "Possible secrets detected."
+                status = (
+                    "No potential secrets found." if not issues else "Possible secrets detected."
+                )
 
         return render_template(
             "secret_scan.html",

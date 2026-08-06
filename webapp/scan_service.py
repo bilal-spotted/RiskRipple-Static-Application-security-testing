@@ -200,7 +200,11 @@ def _execute_scan(run_id: str, options: Dict[str, Any]) -> None:
             threshold_summary["score_breached"] = (
                 report_data.get("repository_risk_score", 0) >= options["fail_on_score"]
             )
-        exit_code = 1 if (threshold_summary["severity_breached"] or threshold_summary["score_breached"]) else 0
+        exit_code = (
+            1
+            if (threshold_summary["severity_breached"] or threshold_summary["score_breached"])
+            else 0
+        )
 
         duration = round(time.time() - start_time, 2)
         storage.update_meta(
