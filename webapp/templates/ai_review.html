@@ -8,8 +8,14 @@
 {% endblock %}
 
 {% block content %}
+{% if error %}
+<section class="panel reveal" style="--delay: 0s;">
+  <div class="empty-state">{{ error }}</div>
+</section>
+{% endif %}
 <section class="panel reveal" style="--delay: 0.05s;">
   <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="form-grid">
       <div class="form-field">
         <label for="target">Repository target</label>
