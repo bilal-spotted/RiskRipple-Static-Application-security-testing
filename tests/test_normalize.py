@@ -37,11 +37,14 @@ class TestPathRelativization(unittest.TestCase):
         self.assertEqual("pkg/module.py", relativize_path("pkg/module.py", self.root))
 
     def test_separators_are_normalised_to_forward_slash(self) -> None:
-        self.assertNotIn("\\", relativize_path("pkg\\sub\\module.py", self.root))
+        # Built with the platform separator: on POSIX a backslash is a legal
+        # filename character, so rewriting one would corrupt a real path.
+        native = os.path.join("pkg", "sub", "module.py")
+        self.assertEqual("pkg/sub/module.py", relativize_path(native, self.root))
 
     def test_path_outside_root_is_left_alone(self) -> None:
         """Better an absolute path than a long chain of '..' segments."""
-        outside = Path(tempfile.gettempdir()).resolve() / "elsewhere" / "mod.py"
+        outside = self.root.parent / "elsewhere" / "mod.py"
         result = relativize_path(str(outside), self.root)
         self.assertNotIn("..", result)
 

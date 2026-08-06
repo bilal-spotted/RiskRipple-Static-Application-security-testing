@@ -34,6 +34,12 @@ def _synthetic_github_token() -> str:
     return "ghp_" + "9Kq2mZx7RvB3nT8wYcF4jH6sL1pD0aQeUgIo"
 
 
+def _synthetic_pem_block() -> str:
+    header = "-----BEGIN " + "PRIVATE KEY-----"
+    footer = "-----END " + "PRIVATE KEY-----"
+    return f"{header}\nMOCK\n{footer}\n"
+
+
 class TestRepositoryHygieneDetection(unittest.TestCase):
     """Test scan_repository_hygiene detects sensitive artifacts."""
 
@@ -75,9 +81,7 @@ class TestRepositoryHygieneDetection(unittest.TestCase):
     def test_detects_pem_key_artifact(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             pem = Path(tmp) / "secret.pem"
-            pem.write_text(
-                "-----BEGIN PRIVATE KEY-----\nMOCK\n-----END PRIVATE KEY-----\n", encoding="utf-8"
-            )
+            pem.write_text(_synthetic_pem_block(), encoding="utf-8")
             findings = scan_repository_hygiene(tmp)
         key_findings = [f for f in findings if f.get("rule_id") == "RH003"]
         self.assertGreaterEqual(len(key_findings), 1)

@@ -94,7 +94,9 @@ class TestScanText(unittest.TestCase):
         self.assertTrue(matches[0].is_placeholder)
 
     def test_private_key_block_detected(self) -> None:
-        content = "-----BEGIN RSA PRIVATE KEY-----\nMIIEow==\n-----END RSA PRIVATE KEY-----\n"
+        header = "-----BEGIN RSA " + "PRIVATE KEY-----"
+        footer = "-----END RSA " + "PRIVATE KEY-----"
+        content = f"{header}\nMIIEow==\n{footer}\n"
         self.assertIn("Private key material", {m.name for m in scan_text(content)})
 
 
