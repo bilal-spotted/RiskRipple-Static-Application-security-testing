@@ -101,6 +101,90 @@ debugger, which permits arbitrary code execution.
 
 ---
 
+## AI-assisted review (optional)
+
+An optional layer that asks a language model to review selected files and
+returns **advisory** findings alongside the rule-based ones.
+
+**The scanner is fully functional without it.** No API key, no network, no
+degraded behaviour — AI is an extra, never a dependency. Every test in the
+suite passes with no key configured.
+
+### Enabling it
+
+1. Get a free API key from [Google AI Studio](https://aistudio.google.com/apikey).
+2. Put it in your environment (never in the repository):
+
+```bash
+set GEMINI_API_KEY=your-key-here
+```
+
+3. Add `--ai-review` to a scan:
+
+```bash
+python scanner.py . --ai-review --format all
+```
+
+The default model runs on Gemini's **free tier**, so demonstrating the feature
+costs nothing.
+
+### Advisory findings never affect the risk score
+
+This is deliberate. The project's central claim is that every point of the risk
+score traces to a documented rule and weight. A model's judgement is not a rule,
+so AI findings are:
+
+- carried in their own report section, clearly attributed
+- excluded from the risk score and severity counts
+- always reported at LOW confidence
+
+You get the extra perspective without losing the deterministic guarantee.
+
+### Cost controls
+
+| Setting | Purpose | Default |
+|---------|---------|---------|
+| `RISKRIPPLE_AI_MAX_FILES` | Files sent per run | 10 |
+| `RISKRIPPLE_AI_MAX_CHARS` | Characters sent per file | 12000 |
+| `RISKRIPPLE_AI_CACHE_DIR` | Response cache location | `~/.cache/riskripple/ai` |
+
+Responses are cached by content hash, so re-scanning unchanged files costs
+nothing.
+
+### Using a different model or provider
+
+Change the model with an environment variable — no code edit:
+
+```bash
+set RISKRIPPLE_AI_MODEL=gemini-2.5-flash-lite
+```
+
+To use a **different provider entirely**, implement one method in
+[`core/ai_provider.py`](core/ai_provider.py) and register it:
+
+```python
+class MyProvider:
+    name = "myprovider"
+    model = "some-model"
+
+    def generate_json(self, prompt: str, schema: dict):
+        """Call your API and return parsed JSON matching `schema`.
+        Raise AIProviderError(kind, message) on failure."""
+        ...
+
+_PROVIDERS = {"gemini": _build_gemini, "myprovider": _build_myprovider}
+```
+
+Then set `RISKRIPPLE_AI_PROVIDER=myprovider`. Nothing else in the pipeline
+changes — it only knows about the `generate_json` contract. The Gemini
+implementation uses the standard library rather than a vendor SDK, so adding a
+provider adds no dependency.
+
+The prompt and the response schema live in
+[`prompts/security_prompts.py`](prompts/security_prompts.py).
+
+---
+
 ## Why this project
 
 - **Explainable**: Every finding links to a rule; every score component is documented. No ML—auditable and interview-friendly.
