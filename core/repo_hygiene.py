@@ -340,7 +340,10 @@ def check_gitignore_hygiene(root_path: str) -> List[Dict[str, Any]]:
     root = Path(root_path).resolve()
     repo_root = _find_repo_root(root)
     if repo_root is None:
-        return []
+        # No repository detected above the target. Evaluate the target itself
+        # rather than staying silent: a directory with no .gitignore is exactly
+        # the case where hygiene guidance is most useful.
+        repo_root = root
     gitignore_path = repo_root / ".gitignore"
     findings: List[Dict[str, Any]] = []
 

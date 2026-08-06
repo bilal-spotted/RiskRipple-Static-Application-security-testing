@@ -11,6 +11,8 @@ main scanner; use --include-test-fixtures to scan those directories too.
 excluded dirs), since they should not be committed with real secrets.
 """
 
+from __future__ import annotations
+
 import argparse
 import re
 import sys
