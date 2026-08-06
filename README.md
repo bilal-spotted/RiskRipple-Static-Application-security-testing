@@ -1,11 +1,9 @@
 # Risk Ripple
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://github.com/your-org/ai-repo-security-scanner/actions/workflows/tests.yml/badge.svg)](https://github.com/your-org/ai-repo-security-scanner/actions/workflows/tests.yml)
-[![Lint](https://github.com/your-org/ai-repo-security-scanner/actions/workflows/lint.yml/badge.svg)](https://github.com/your-org/ai-repo-security-scanner/actions/workflows/lint.yml)
-
-*Replace `your-org` in badge URLs with your GitHub org/repo for CI status.*
+[![Tests](https://github.com/bilal-spotted/RiskRipple-Static-Application-security-testing/actions/workflows/tests.yml/badge.svg)](https://github.com/bilal-spotted/RiskRipple-Static-Application-security-testing/actions/workflows/tests.yml)
+[![Lint](https://github.com/bilal-spotted/RiskRipple-Static-Application-security-testing/actions/workflows/lint.yml/badge.svg)](https://github.com/bilal-spotted/RiskRipple-Static-Application-security-testing/actions/workflows/lint.yml)
 
 **Rule-based SAST and repository hygiene for local Python projects.** Combines AST analysis, regex rules, intra-procedural taint tracking, and repo hygiene checks to produce **explainable** risk scores and reports (Markdown, HTML, JSON, SARIF). No black-box ML—every finding and score is traceable. Built for clarity, demos, and security-tool discussions.
 
@@ -36,8 +34,8 @@
 ## Quickstart
 
 ```bash
-git clone https://github.com/your-org/ai-repo-security-scanner.git
-cd ai-repo-security-scanner
+git clone https://github.com/bilal-spotted/RiskRipple-Static-Application-security-testing.git
+cd RiskRipple-Static-Application-security-testing
 python -m venv venv
 # Windows: venv\Scripts\activate
 # Linux/macOS: source venv/bin/activate
@@ -257,7 +255,7 @@ Use `--fail-on-severity` and `--fail-on-score` in CI to enforce thresholds.
 
 ## Installation & usage
 
-**Requirements:** Python 3.8+
+**Requirements:** Python 3.10+
 
 1. Clone, create a venv, and install: `pip install -r requirements.txt`
 2. Run: `python scanner.py <path_to_repo_or_folder>`
@@ -323,10 +321,11 @@ Severity counts:
   MEDIUM: 1
   LOW: 0
 
-Repository risk score: 91 — Risk level: High
+Repository risk score: 100 — Risk level: High
 
 Top risky files:
-1. samples\vulnerable_sample.py (score 68, 7 findings)
+1. vulnerable_sample.py (score 83, 8 findings)
+2. .gitignore (score 3, 1 findings)
 ...
 ```
 
@@ -374,7 +373,7 @@ ruff format --check .
 
 CI runs tests and lint on push/PR (`.github/workflows/tests.yml`, `.github/workflows/lint.yml`). Optional: `pre-commit install` (see `.pre-commit-config.yaml`).
 
-**Note:** If `pytest.ini` exists, pytest uses it instead of `pyproject.toml`. Remove `pytest.ini` to use the pytest config in `pyproject.toml` only.
+Pytest configuration lives in `pyproject.toml` under `[tool.pytest.ini_options]`.
 
 ---
 

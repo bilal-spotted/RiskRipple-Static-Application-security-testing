@@ -8,13 +8,19 @@ def get_rules() -> List[Dict[str, Any]]:
     return [
         {
             "rule_id": "SEC003",
-            "title": "Flask debug mode enabled",
-            "pattern": re.compile(r"""\bdebug\s*=\s*True\b"""),
+            "title": "Debug mode enabled",
+            # Anchored to a run() call or an upper-case config constant. The
+            # rule previously matched any "debug=True" anywhere, including a
+            # local variable named debug in unrelated code.
+            "pattern": re.compile(
+                r"""(?:\.run\s*\([^)]*\bdebug\s*=\s*True\b)|(?:^\s*DEBUG\s*=\s*True\b)""",
+                re.MULTILINE,
+            ),
             "severity": "MEDIUM",
             "confidence": "HIGH",
             "category": "Insecure Configuration",
-            "description": "Debug mode may expose sensitive information in production.",
-            "recommendation": "Disable debug mode in production deployments.",
+            "description": "Debug mode exposes stack traces and, in Flask, an interactive console that permits code execution.",
+            "recommendation": "Disable debug mode in production. Drive it from an environment variable rather than a literal.",
             "python_only": False,
         },
         {
@@ -22,10 +28,13 @@ def get_rules() -> List[Dict[str, Any]]:
             "title": "TLS certificate verification disabled",
             "pattern": re.compile(r"""\bverify\s*=\s*False\b"""),
             "severity": "HIGH",
-            "confidence": "HIGH",
+            # A single line cannot prove this is a TLS call rather than some
+            # other parameter named verify, so the finding is reported at
+            # reduced confidence rather than asserted.
+            "confidence": "MEDIUM",
             "category": "TLS / SSL",
-            "description": "Disabling certificate verification weakens transport security.",
-            "recommendation": "Enable certificate verification and trust valid CA certificates.",
+            "description": "Disabling certificate verification removes protection against man-in-the-middle attacks.",
+            "recommendation": "Leave verification enabled and trust a valid CA bundle. For internal certificates, pass the CA path instead of disabling checks.",
             "python_only": False,
         },
         {

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -89,7 +89,7 @@ def generate_sarif_report(report_data: Dict[str, Any], output_path) -> None:
                 "invocations": [
                     {
                         "executionSuccessful": True,
-                        "startTimeUtc": datetime.utcnow().isoformat() + "Z",
+                        "startTimeUtc": datetime.now(timezone.utc).isoformat(),
                         "properties": inv_properties,
                     }
                 ],

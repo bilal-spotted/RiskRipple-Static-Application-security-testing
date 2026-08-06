@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Union
 
@@ -19,7 +19,7 @@ def generate_json_report(report_data: Dict[str, Any], output_path: Union[str, Pa
     output = {
         "tool": "Risk Ripple",
         "version": "1.0.0",
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
         "target": report_data.get("target"),
         "scan_summary": {
             "files_scanned": report_data.get("files_scanned", 0),
