@@ -31,14 +31,19 @@ def get_rules() -> List[Dict[str, Any]]:
         {
             "rule_id": "SEC009",
             "title": "Insecure random for security-sensitive context",
+            # Matches calls only. The rule previously also matched a bare
+            # "import random", which fired on every file importing the module
+            # for any reason - shuffling a list, picking a sample - and had
+            # nothing to do with security. Importing it is not a finding; using
+            # it to generate a value might be.
             "pattern": re.compile(
-                r"""(?i)\b(random\.(randint|randrange|random)\s*\(|\bimport\s+random\b)"""
+                r"""\brandom\.(randint|randrange|random|choice|sample|shuffle|uniform)\s*\("""
             ),
             "severity": "LOW",
             "confidence": "LOW",
             "category": "Cryptography",
-            "description": "The `random` module is not suitable for security-sensitive randomness (tokens, secrets, keys).",
-            "recommendation": "Use the `secrets` module for tokens/keys, or `os.urandom` for raw bytes.",
+            "description": "The `random` module is not suitable for security-sensitive randomness (tokens, secrets, keys). Harmless for simulations or sampling.",
+            "recommendation": "For tokens, keys or anything security-sensitive use the `secrets` module, or `os.urandom` for raw bytes.",
             "python_only": True,
         },
     ]

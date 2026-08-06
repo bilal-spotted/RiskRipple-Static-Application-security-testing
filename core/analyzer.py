@@ -1,3 +1,16 @@
+"""
+Per-file analysis orchestrator.
+
+Runs the detection engines over a single file and returns their combined
+findings: AST analysis and taint tracking for Python, regex rules for every
+supported language. Results are deduplicated and sorted by line, then severity.
+
+Because the regex engine matches text, it also matches this project's own rule
+definitions - a line reading '"title": "Use of eval()"' looks exactly like a
+call to eval(). Comment lines and rule-metadata lines are filtered out before
+matching so the scanner does not report itself.
+"""
+
 from __future__ import annotations
 
 import ast
@@ -62,7 +75,7 @@ def analyze_file(file_path: str) -> List[Dict[str, Any]]:
     # 2) Regex-based supplemental detection
     findings.extend(_analyze_with_regex(path, content, lines))
 
-    # 3) 去重
+    # 3) Remove duplicates
     findings = _deduplicate_findings(findings)
 
     # 4) Sort: line number, then severity (high first), then rule_id
@@ -241,11 +254,11 @@ def _analyze_with_regex(path: Path, content: str, lines: List[str]) -> List[Dict
         if not stripped:
             continue
 
-        # Python 注释行直接忽略
+        # Skip Python comment-only lines
         if line_number in comment_only_lines:
             continue
 
-        # 明显是规则说明元数据时，不要报危险函数类误报
+        # Skip rule-metadata text so rule definitions do not report themselves
         if _looks_like_metadata_line(line):
             continue
 
@@ -290,28 +303,30 @@ def _make_finding(
     recommendation: str,
 ) -> Dict[str, Any]:
     """
-    返回兼容性更好的 finding dict。
-    保留多组常见字段名，尽量适配现有 report / html / json 模块。
+    Build a finding dict.
+
+    Carries both canonical keys (file_path, line_number) and legacy aliases
+    (file, line, snippet), because the report generators read a mix of both.
     """
     one_line_code = _extract_main_line_from_snippet(code_snippet, line_number)
 
     return {
         "rule_id": rule_id,
         "title": title,
-        "type": title,  # 兼容旧字段
+        "type": title,  # legacy alias
         "severity": severity,
         "confidence": confidence,
         "category": category,
         "file_path": file_path,
-        "file": file_path,  # 兼容旧字段
+        "file": file_path,  # legacy alias
         "line_number": line_number,
-        "line": line_number,  # 兼容旧字段
+        "line": line_number,  # legacy alias
         "code_snippet": code_snippet,
-        "snippet": code_snippet,  # 兼容旧字段
-        "code": one_line_code,  # 兼容旧字段
+        "snippet": code_snippet,  # legacy alias
+        "code": one_line_code,  # legacy alias
         "description": description,
         "recommendation": recommendation,
-        "suggested_fix": recommendation,  # 兼容旧字段
+        "suggested_fix": recommendation,  # legacy alias
     }
 
 
@@ -344,7 +359,7 @@ def _call_has_keyword_true(node: ast.Call, keyword_name: str) -> bool:
 
 def _build_snippet(lines: List[str], line_number: int, context: int = 1) -> str:
     """
-    返回上下文 snippet，包含前后各 1 行，便于报告展示。
+    Return the line plus one line of context either side, for report display.
     """
     if not lines or line_number <= 0:
         return ""
@@ -369,18 +384,23 @@ def _extract_main_line_from_snippet(snippet: str, line_number: int) -> str:
 
 def _looks_like_metadata_line(line: str) -> bool:
     """
-    过滤明显不是可执行代码、而是规则说明/报告元数据的文本行。
-    重点解决：
-    "title": "Use of eval()"
-    "recommendation": "Avoid exec()"
-    这类误报
+    True for lines that are rule metadata rather than executable code.
+
+    Without this the scanner reports its own rule definitions: a line reading
+    '"title": "Use of eval()"' would otherwise match the eval rule.
     """
     lowered = line.lower()
     if any(hint.lower() in lowered for hint in METADATA_HINTS):
         return True
 
-    # 规则定义中常见的纯说明性键值
+    # A bare "key": "value" line, typical of rule definitions
     if re.search(r"""^\s*["']?[a-zA-Z_]+["']?\s*:\s*["'].*["']\s*,?\s*$""", line):
+        return True
+
+    # A line holding nothing but a raw-string literal. When a rule's regex is
+    # long enough to wrap onto its own line, the "pattern" key is no longer on
+    # it, so the check above misses and the rule matches its own definition.
+    if re.match(r"""^\s*r(?:\"\"\"|'''|\"|').*$""", line):
         return True
 
     return False
@@ -388,7 +408,7 @@ def _looks_like_metadata_line(line: str) -> bool:
 
 def _get_python_comment_only_lines(content: str) -> set:
     """
-    找出 Python 中纯注释行，便于 regex 阶段忽略。
+    Return the line numbers of comment-only lines, so regex rules can skip them.
     """
     comment_lines = set()
 

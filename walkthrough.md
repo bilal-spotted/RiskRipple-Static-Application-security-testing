@@ -18,9 +18,8 @@ A **rule-based Static Application Security Testing (SAST)** tool and **repositor
 ```
 ai-repo-security-scanner-main/
 ├── scanner.py              ← CLI entry point (main)
-├── utils.py                ← Legacy utility (RiskSummary, score helper)
 ├── pyproject.toml           ← Package config, dependencies, CLI script
-├── requirements.txt         ← Minimal deps (PyYAML, python-dotenv, GitPython)
+├── requirements.txt         ← Minimal deps (PyYAML, Flask)
 ├── core/                    ← Core scanning engine
 │   ├── analyzer.py          ← File analysis orchestrator (AST + regex)
 │   ├── taint_analysis.py    ← Intra-procedural taint tracking
@@ -30,8 +29,10 @@ ai-repo-security-scanner-main/
 │   ├── risk.py              ← Risk scoring model (repo + file level)
 │   ├── severity.py          ← Canonical severity levels & weights
 │   ├── normalize.py         ← Finding normalization & deduplication
-│   ├── models.py            ← Dataclass models (Finding, ScanError, etc.)
-│   └── ai_review.py         ← Optional OpenAI-powered review
+│   ├── ai_review.py         ← Optional AI review orchestration
+│   ├── ai_provider.py       ← AI provider adapter (Gemini via REST)
+│   ├── git_context.py       ← Git tracked/ignored classification
+│   └── secrets_detection.py ← Shared credential patterns
 ├── rules/                   ← Detection rule definitions
 │   ├── python_rules.py      ← eval/exec regex fallbacks (non-Python files)
 │   ├── secrets_rules.py     ← Hardcoded passwords, API keys, tokens, PEM keys
@@ -40,8 +41,7 @@ ai-repo-security-scanner-main/
 │   └── metadata/rules.yaml  ← Rich rule metadata (CWE, OWASP, remediation)
 ├── io_utils/                ← File I/O utilities
 │   ├── repo_loader.py       ← Walk directory, collect source files
-│   ├── file_loader.py       ← Priority-sorted file collection for AI review
-│   └── patch_suggester.py   ← Simple fix suggestions by rule name
+│   └── file_loader.py       ← Priority-sorted file collection for AI review
 ├── reports/                 ← Report generators
 │   ├── html_report.py       ← Standalone dark-themed HTML dashboard
 │   ├── markdown_report.py   ← Audit-style markdown report
@@ -381,21 +381,17 @@ Walks directory, skips `.git`, `__pycache__`, `node_modules`, `venv`, `build`, `
 
 Alternative collector used for AI review. Prioritizes security-relevant filenames (containing `auth`, `login`, `secret`, `config`, etc.) and caps at 50 files.
 
-### `io_utils/patch_suggester.py`
-
-Simple dictionary lookup returning fix suggestions by rule name (e.g., `"eval"` → `"Avoid eval(). Replace with safer parsing logic."`).
-
 ### `core/ai_review.py`
 
-Optional OpenAI integration. Sends code snippets with a security prompt to GPT. Gracefully degrades if no API key or no `openai` package.
+Optional AI review. Sends numbered source with a security prompt, parses the structured JSON reply into findings, caches by content hash and enforces per-run budgets. Findings are advisory: they are reported separately and excluded from the risk score.
+
+### `core/ai_provider.py`
+
+The only module that talks to a model. Calls the Gemini REST API through the standard library, so the feature adds no dependency. Failures carry a typed kind (auth, rate limit, unknown model, network, bad response) rather than being flattened into one string.
 
 ### `prompts/security_prompts.py`
 
-System prompt template for AI review, focusing on auth flaws, injection, deserialization, crypto, etc.
-
-### `core/models.py`
-
-Frozen dataclasses: `Finding`, `ScanError`, `RepoScanSummary`. Provide `to_dict()` for backward compatibility. The codebase primarily uses dicts, but these exist for future migration.
+The audit prompt and the JSON response schema passed to the provider's structured-output mode, plus the allowed severity and category values used to validate replies.
 
 ### `core/severity.py`
 
