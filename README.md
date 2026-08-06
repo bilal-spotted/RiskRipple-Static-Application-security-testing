@@ -67,13 +67,37 @@ Open http://127.0.0.1:8000 in a browser. The GUI stores run data under `webapp/d
 
 Optional environment variables:
 
-```bash
-set WEBAPP_HOST=127.0.0.1
-set WEBAPP_PORT=8000
-set WEBAPP_DEBUG=1
-```
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `WEBAPP_HOST` | Bind address | `127.0.0.1` |
+| `WEBAPP_PORT` | Port | `8000` |
+| `WEBAPP_DEBUG` | Werkzeug debug mode | off |
+| `WEBAPP_SECRET_KEY` | Session signing key; a random per-process key is generated when unset | *(random)* |
+| `WEBAPP_OUTPUT_ROOT` | Directory that scan output must stay inside | current working directory |
 
 The CLI remains available and unchanged: `python scanner.py <path>`.
+
+### Security posture of the web GUI
+
+The GUI is a **single-user local tool**. It has no authentication and it reads
+the local filesystem by design, so it is built for loopback use only.
+
+Within that model it enforces:
+
+- **CSRF tokens** on every state-changing request, so another site you have open
+  cannot drive the interface on your behalf.
+- **Path confinement** on file reads. The AI review page only reads files that
+  the loaded target directory actually enumerated — a request naming an
+  arbitrary path is refused. This matters most when an API key is configured,
+  since reviewed content leaves your machine.
+- **Output confinement.** Report writing cannot escape `WEBAPP_OUTPUT_ROOT`;
+  absolute paths and `..` traversal outside it are refused.
+- **No shared default secret.** When `WEBAPP_SECRET_KEY` is unset a random key
+  is generated per process rather than falling back to a constant.
+
+Do not expose it on a network. Setting `WEBAPP_HOST` to a non-loopback address
+prints a warning; combining that with `WEBAPP_DEBUG=1` exposes the Werkzeug
+debugger, which permits arbitrary code execution.
 
 ---
 

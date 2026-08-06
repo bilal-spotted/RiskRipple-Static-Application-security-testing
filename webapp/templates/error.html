@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block hero %}
+<section class="hero reveal" style="--delay: 0s;">
+  <h1>Request rejected</h1>
+  <p>{{ message or "The request could not be processed." }}</p>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="panel reveal" style="--delay: 0.05s;">
+  <p class="helper">
+    This usually means the page was left open long enough for its session to expire,
+    or the request did not originate from this interface. Reload the page and try again.
+  </p>
+  <a class="btn btn-outline" href="{{ url_for('home') }}">Back to home</a>
+</section>
+{% endblock %}

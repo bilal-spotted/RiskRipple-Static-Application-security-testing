@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import threading
 import time
 import uuid
@@ -13,8 +14,12 @@ from core.severity import normalize_severity
 from io_utils.repo_loader import get_source_files
 from scanner import build_report_data, run_hygiene_checks, scan_repository, write_reports
 from webapp import storage
+from webapp.security import resolve_within
 
 SEVERITY_ORDER = ("CRITICAL", "HIGH", "MEDIUM", "LOW")
+
+# Environment variable naming the root that scan output must stay inside.
+OUTPUT_ROOT_ENV = "WEBAPP_OUTPUT_ROOT"
 
 SCAN_STEPS = [
     ("Validating target", 5),
@@ -94,11 +99,36 @@ def should_fail_on_severity(findings: List[Dict[str, Any]], threshold: str) -> b
     return False
 
 
+def output_root() -> Path:
+    """
+    Directory that scan output must stay inside.
+
+    Defaults to the working directory the server was started from, which
+    preserves the CLI's behaviour of writing to ./output. Override with
+    WEBAPP_OUTPUT_ROOT to point report writing somewhere else.
+    """
+    configured = os.getenv(OUTPUT_ROOT_ENV)
+    base = Path(configured).expanduser() if configured else Path.cwd()
+    return base.resolve()
+
+
 def _resolve_output_dir(output_dir: str) -> Path:
-    path = Path(output_dir)
-    if not path.is_absolute():
-        path = (Path.cwd() / path).resolve()
-    return path
+    """
+    Resolve a requested output directory, refusing anything outside the root.
+
+    Report writing creates directories and writes four files, so an unchecked
+    value here means a request can write to any location the process can reach.
+    Absolute paths and ``..`` traversal are both rejected by containment rather
+    than by pattern matching.
+    """
+    root = output_root()
+    resolved = resolve_within(root, output_dir or "output")
+    if resolved is None:
+        raise ValueError(
+            f"Output directory must stay inside {root}. "
+            f"Refused: {output_dir!r}. Set {OUTPUT_ROOT_ENV} to write elsewhere."
+        )
+    return resolved
 
 
 def start_scan(raw_options: Dict[str, Any]) -> str:

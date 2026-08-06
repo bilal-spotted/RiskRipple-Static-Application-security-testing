@@ -1,24 +1,76 @@
 from __future__ import annotations
 
+import logging
 import os
+import secrets
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from flask import Flask, jsonify, redirect, render_template, request, send_from_directory, url_for
+from flask import (
+    Flask,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+    url_for,
+)
 
 from core.ai_review import ai_review
 from core.rule_registry import load_metadata
 from io_utils.file_loader import collect_source_files, read_file_content
 from tools.check_secrets import scan_repository as scan_secrets
 from webapp import scan_service, storage
+from webapp.security import (
+    CSRF_FORM_FIELD,
+    CSRF_HEADER,
+    SAFE_HTTP_METHODS,
+    csrf_token_is_valid,
+    get_csrf_token,
+    is_loopback_host,
+    select_allowed_file,
+)
+
+logger = logging.getLogger(__name__)
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    app.secret_key = os.getenv("WEBAPP_SECRET_KEY", "dev-key")
+
+    # A fixed key is only needed to keep sessions valid across restarts. When
+    # none is configured we generate a per-process key rather than falling back
+    # to a shared constant, which would make session cookies and CSRF tokens
+    # forgeable by anyone who has read this source.
+    configured_secret = os.getenv("WEBAPP_SECRET_KEY")
+    app.secret_key = configured_secret or secrets.token_hex(32)
+
+    # The session cookie carries the CSRF token, so keep it away from scripts
+    # and from cross-site requests.
+    app.config.update(
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_SAMESITE="Lax",
+    )
 
     storage.ensure_storage()
+
+    @app.before_request
+    def _require_csrf_token():
+        """Reject state-changing requests that do not carry this session's token."""
+        if request.method in SAFE_HTTP_METHODS:
+            return None
+        submitted = request.form.get(CSRF_FORM_FIELD) or request.headers.get(CSRF_HEADER)
+        if csrf_token_is_valid(session, submitted):
+            return None
+        logger.warning(
+            "Rejected %s %s: missing or invalid CSRF token", request.method, request.path
+        )
+        return render_template("error.html", message="Invalid or missing CSRF token."), 400
+
+    @app.context_processor
+    def _inject_csrf_token() -> Dict[str, Any]:
+        return {"csrf_token": lambda: get_csrf_token(session)}
 
     @app.template_filter("fmt_ts")
     def _fmt_ts(value: Optional[str]) -> str:
@@ -290,21 +342,29 @@ def create_app() -> Flask:
         rules.sort(key=lambda r: (r.get("category", ""), r.get("rule_id", "")))
         return render_template("rules.html", rules=rules, active_page="rules")
 
+    def _enumerate_reviewable_files(target: str) -> tuple[List[Path], List[Dict[str, str]]]:
+        """Return the files offered for review under a target directory."""
+        if not target:
+            return [], []
+        try:
+            path = Path(target).expanduser().resolve()
+        except (OSError, ValueError, RuntimeError):
+            return [], []
+        if not path.is_dir():
+            return [], []
+        files = collect_source_files(path)
+        options = [{"value": str(item), "label": str(item.relative_to(path))} for item in files]
+        return files, options
+
     @app.route("/ai-review", methods=["GET", "POST"])
     def ai_review_page() -> str:
         target = request.args.get("target", "").strip()
-        files: List[Path] = []
-        file_options: List[Dict[str, str]] = []
         review_result = ""
         snippet = ""
         selected_file = ""
+        error = ""
 
-        if target:
-            path = Path(target).expanduser().resolve()
-            if path.is_dir():
-                files = collect_source_files(path)
-                for item in files:
-                    file_options.append({"value": str(item), "label": str(item.relative_to(path))})
+        files, file_options = _enumerate_reviewable_files(target)
 
         if request.method == "POST":
             action = request.form.get("action")
@@ -315,10 +375,24 @@ def create_app() -> Flask:
             if action == "load_files" and target:
                 return redirect(url_for("ai_review_page", target=target))
 
-            if selected_file and (action == "load_file" or not snippet):
-                snippet = read_file_content(Path(selected_file))
+            files, file_options = _enumerate_reviewable_files(target)
 
-            if action == "run_review" and snippet:
+            if selected_file and (action == "load_file" or not snippet):
+                # Only read files this target actually enumerated. Without this
+                # the form value alone decides what gets read, which lets any
+                # readable file be loaded and then forwarded to the AI provider.
+                allowed_path = select_allowed_file(selected_file, files)
+                if allowed_path is None:
+                    error = (
+                        "That file is not available for review. Choose one of the listed "
+                        "files under the loaded target directory."
+                    )
+                    logger.warning("Rejected AI review file outside target: %s", selected_file)
+                    selected_file = ""
+                else:
+                    snippet = read_file_content(allowed_path)
+
+            if action == "run_review" and snippet and not error:
                 file_label = selected_file or "snippet"
                 review_result = ai_review(snippet, file_label)
 
@@ -330,6 +404,7 @@ def create_app() -> Flask:
             selected_file=selected_file,
             snippet=snippet,
             review_result=review_result,
+            error=error,
         )
 
     @app.route("/tools/secrets", methods=["GET", "POST"])
@@ -371,9 +446,28 @@ def create_app() -> Flask:
     return app
 
 
+def _warn_on_exposed_binding(host: str, debug: bool) -> None:
+    """
+    Warn when the server is reachable beyond this machine.
+
+    The interface has no authentication and reads the local filesystem by
+    design, so exposing it is a meaningful decision rather than a detail. With
+    the Werkzeug debugger also enabled it offers remote code execution.
+    """
+    if is_loopback_host(host):
+        return
+    print(f"\n  WARNING: binding to {host} exposes this interface beyond localhost.")
+    print("  It has no authentication and can read local files. Intended for loopback use only.")
+    if debug:
+        print("  WARNING: debug mode on a non-loopback host exposes the interactive debugger,")
+        print("  which allows arbitrary code execution. Do not do this.")
+    print()
+
+
 if __name__ == "__main__":
     app = create_app()
     host = os.getenv("WEBAPP_HOST", "127.0.0.1")
     port = int(os.getenv("WEBAPP_PORT", "8000"))
     debug = os.getenv("WEBAPP_DEBUG", "0") == "1"
+    _warn_on_exposed_binding(host, debug)
     app.run(host=host, port=port, debug=debug)
