@@ -53,7 +53,7 @@ class TestPathConfinement(unittest.TestCase):
                 self.assertIsNone(resolve_within(self.base, attempt))
 
     def test_absolute_path_outside_base_is_rejected(self) -> None:
-        outside = Path(tempfile.gettempdir()).resolve() / "definitely_outside_riskripple.txt"
+        outside = self.base.parent / "definitely_outside_riskripple.txt"
         self.assertIsNone(resolve_within(self.base, str(outside)))
 
     def test_empty_and_none_are_rejected(self) -> None:
@@ -145,7 +145,7 @@ class TestOutputDirectoryConfinement(unittest.TestCase):
         self.assertTrue(resolved.is_relative_to(output_root()))
 
     def test_absolute_path_outside_root_is_refused(self) -> None:
-        outside = str(Path(tempfile.gettempdir()).resolve() / "riskripple_escape")
+        outside = str(Path(self._tmp.name).resolve().parent / "riskripple_escape")
         with self.assertRaises(ValueError):
             _resolve_output_dir(outside)
 
@@ -186,11 +186,15 @@ class TestRequestLevelProtections(unittest.TestCase):
         self.assertEqual(400, response.status_code)
 
     def test_post_with_valid_csrf_token_is_accepted(self) -> None:
-        token = self._csrf_token()
-        response = self.client.post(
-            "/tools/secrets",
-            data={"target": tempfile.gettempdir(), CSRF_FORM_FIELD: token},
-        )
+        # Scan an isolated directory, never the shared system temp: on a CI
+        # runner that holds unrelated and sometimes unreadable files.
+        with tempfile.TemporaryDirectory() as tmp:
+            (Path(tmp) / "clean.py").write_text("value = 1\n", encoding="utf-8")
+            token = self._csrf_token()
+            response = self.client.post(
+                "/tools/secrets",
+                data={"target": tmp, CSRF_FORM_FIELD: token},
+            )
         self.assertEqual(200, response.status_code)
 
     def test_get_requests_need_no_token(self) -> None:
