@@ -36,9 +36,23 @@ dev = [
 [project.scripts]
 ai-repo-scanner = "scanner:main"
 
+[tool.setuptools]
+# scanner.py is a top-level module, not a package, so packages.find never picks
+# it up. Without this the console script cannot import it, and webapp fails to
+# import too because scan_service imports from scanner.
+py-modules = ["scanner"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["core*", "io_utils*", "reports*", "rules*", "prompts*", "webapp*", "tools*"]
+
+[tool.setuptools.package-data]
+# Non-Python files are not installed unless declared. rules.yaml carries every
+# CWE, OWASP and remediation string, so omitting it leaves an installed package
+# loading zero rule metadata; the templates and assets are what the web UI
+# renders from.
+rules = ["metadata/*.yaml"]
+webapp = ["templates/*.html", "templates/**/*.html", "static/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

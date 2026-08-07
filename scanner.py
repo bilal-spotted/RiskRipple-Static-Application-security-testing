@@ -138,7 +138,18 @@ def parse_args() -> argparse.Namespace:
         help="Only print errors and exit status; no scan summary",
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    # Reject nonsense values here rather than letting them surface as a
+    # traceback from deep inside ThreadPoolExecutor.
+    if args.workers < 1:
+        parser.error("--workers must be at least 1")
+    if args.top_files < 0:
+        parser.error("--top-files cannot be negative")
+    if args.ai_max_files is not None and args.ai_max_files < 1:
+        parser.error("--ai-max-files must be at least 1")
+
+    return args
 
 
 # =========================
